@@ -1,5 +1,5 @@
 // Importación de los paquetes y pantallas necesarias
-import 'package:flutter/material.dart'; 
+import 'package:flutter/material.dart';
 import 'screens/login_screen.dart'; // Pantalla de login
 import 'screens/register_screen.dart'; // Pantalla de registro
 import 'screens/home_screen.dart'; // Pantalla de inicio

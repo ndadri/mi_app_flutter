@@ -1,5 +1,6 @@
 // Importación del paquete Flutter para la interfaz de usuario
 import 'package:flutter/material.dart';
+import 'menssages_screen.dart';
 
 // Clase principal para la pantalla de Matches
 class MatchesScreen extends StatelessWidget {
@@ -50,8 +51,8 @@ class MatchesScreen extends StatelessWidget {
                 ),
                 itemBuilder: (context, index) {
                   // Construcción de cada celda en el GridView
-                  final match = matches[index]; // Obtén los datos del match
-                  return _matchCard(match['nombre']!, match['imagen']!);
+                  final match = matches[index];
+                  return _matchCard(context, match['nombre']!, match['imagen']!);
                   // Llama a la función _matchCard para construir cada tarjeta
                 },
               ),
@@ -60,39 +61,50 @@ class MatchesScreen extends StatelessWidget {
   }
 
   // Widget para la tarjeta que muestra el nombre y la imagen de cada mascota
-  Widget _matchCard(String nombre, String imagen) {
-    return Container(
-      // Estilo de la tarjeta (contenedor que representa un match)
-      decoration: BoxDecoration(
-        color: Colors.white, // Fondo blanco para la tarjeta
-        borderRadius: BorderRadius.circular(16), // Bordes redondeados
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)], // Sombra de la tarjeta
-      ),
-      child: Column(
-        children: [
-          // Imagen de la mascota (expandida para llenar la tarjeta)
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)), // Bordes redondeados en la parte superior
-              child: Image.network(
-                imagen, // Carga la imagen desde la URL
-                width: double.infinity, // Ancho completo de la tarjeta
-                fit: BoxFit.cover, // Ajuste de la imagen para cubrir el espacio
-              ),
-            ),
+  Widget _matchCard(BuildContext context, String nombre, String imagen) {
+    return GestureDetector(
+      onTap: () {
+        // Aquí debes pasar el matchId real, por ahora usa un valor de ejemplo
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MessagesScreen(matchId: 'match_id_de_ejemplo'),
           ),
-          // Nombre de la mascota debajo de la imagen
-          Padding(
-            padding: const EdgeInsets.all(8), // Padding alrededor del texto
-            child: Text(
-              nombre, // Nombre de la mascota
-              style: const TextStyle(
-                fontWeight: FontWeight.w600, // Fuente en negrita
-                fontSize: 16, // Tamaño de la fuente
+        );
+      },
+      child: Container(
+        // Estilo de la tarjeta (contenedor que representa un match)
+        decoration: BoxDecoration(
+          color: Colors.white, // Fondo blanco para la tarjeta
+          borderRadius: BorderRadius.circular(16), // Bordes redondeados
+          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)], // Sombra de la tarjeta
+        ),
+        child: Column(
+          children: [
+            // Imagen de la mascota (expandida para llenar la tarjeta)
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)), // Bordes redondeados en la parte superior
+                child: Image.network(
+                  imagen, // Carga la imagen desde la URL
+                  width: double.infinity, // Ancho completo de la tarjeta
+                  fit: BoxFit.cover, // Ajuste de la imagen para cubrir el espacio
+                ),
               ),
             ),
-          )
-        ],
+            // Nombre de la mascota debajo de la imagen
+            Padding(
+              padding: const EdgeInsets.all(8), // Padding alrededor del texto
+              child: Text(
+                nombre, // Nombre de la mascota
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600, // Fuente en negrita
+                  fontSize: 16, // Tamaño de la fuente
+                ),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
