@@ -13,6 +13,7 @@ void main() {
   runApp(const PetMatchApp()); // Llama a la app principal PetMatchApp
 }
 
+
 // Clase principal de la aplicación
 class PetMatchApp extends StatelessWidget {
   const PetMatchApp({super.key});
