@@ -1,9 +1,10 @@
-// Importación del paquete Flutter para la interfaz de usuario
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'forgot_password_screen.dart';
-import 'home_screen.dart'; // <-- Importa tu pantalla de inicio
+import 'package:http/http.dart' as http;
 
-// Clase principal para la pantalla de Login
+import 'forgot_password_screen.dart';
+import 'home_screen.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -12,114 +13,161 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  bool _obscurePassword = true; // Controla si la contraseña es visible o no
-  bool _emailValid = true; // Simulación de validación del email
+  bool _obscurePassword = true;
+  bool _emailValid = true;
+
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  // Método de validación de email
+  void _validateEmail(String email) {
+    setState(() {
+      _emailValid = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+          .hasMatch(email);
+    });
+  }
+
+  Future<void> loginUsuario(String username, String password) async {
+    final url = Uri.parse('http://localhost:8080/api/login');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': username, 'password': password}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('✅ Usuario autenticado: ${data['user']}');
+
+        // Redirigir al home (ajusta si usas otra ruta)
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        final error = jsonDecode(response.body);
+        _mostrarDialogoError(error['error']);
+      }
+    } catch (e) {
+      _mostrarDialogoError('No se pudo conectar con el servidor.\n$e');
+    }
+  }
+
+  void _mostrarDialogoError(String mensaje) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Error de inicio de sesión'),
+        content: Text(mensaje),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Aceptar'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEDEDED), // Color de fondo gris claro
-      body: SingleChildScrollView( // Hacemos la pantalla desplazable en caso de que el teclado se active
+      backgroundColor: const Color(0xFFEDEDED),
+      body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header con color morado y texto 'Pet Match'
             Container(
-              height: 150, // Altura del contenedors
-              width: double.infinity, // Toma todo el ancho de la pantalla
+              height: 150,
+              width: double.infinity,
               decoration: const BoxDecoration(
-                color: Color(0xFF7A45D1), // Color morado
+                color: Color(0xFF7A45D1),
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(35), // Bordes redondeados solo en la parte inferior
+                  bottomLeft: Radius.circular(35),
                   bottomRight: Radius.circular(35),
                 ),
               ),
-              alignment: Alignment.bottomCenter, // Alinea el texto en la parte inferior
-              padding: const EdgeInsets.only(bottom: 20), // Espaciado inferior
+              alignment: Alignment.bottomCenter,
+              padding: const EdgeInsets.only(bottom: 20),
               child: const Text(
-                'Pet Match', // Título principal de la app
+                'Pet Match',
                 style: TextStyle(
-                  fontFamily: 'AntonSC', // <-- Aquí
-                  fontSize: 60, // Tamaño de la fuente
-                  fontWeight: FontWeight.bold, // Fuente en negrita
-                  color: Colors.white, // Color de texto blanco
-                  letterSpacing: 1.5, // Espaciado entre letras
+                  fontFamily: 'AntonSC',
+                  fontSize: 60,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1.5,
                 ),
               ),
             ),
-            const SizedBox(height: 50), // Espacio entre el encabezado y el formulario
-
-            // Card blanca con el formulario de inicio de sesión
+            const SizedBox(height: 50),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24), // Padding horizontal
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28), // Padding interno
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
                 decoration: BoxDecoration(
-                  color: Colors.white, // Fondo blanco
-                  borderRadius: BorderRadius.circular(16), // Bordes redondeados
-                  boxShadow: [ // Sombra para dar un efecto de elevación
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08), // Color de la sombra
-                      blurRadius: 16, // Desenfoque de la sombra
-                      offset: const Offset(0, 8), // Desplazamiento de la sombra
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch, // Alinea el contenido a la izquierda
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
                       'Iniciar Sesión',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontFamily: 'AntonSC', // <-- Aquí, dentro de style
+                        fontFamily: 'AntonSC',
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 24), // Espaciado entre el título y el campo de texto
-
-                    // Campo de texto para el nombre de usuario (simula validación de email)
+                    const SizedBox(height: 24),
                     TextField(
+                      controller: _usernameController,
+                      onChanged: _validateEmail, // Llamada a la validación del email
                       decoration: InputDecoration(
-                        labelText: 'Nombre de Usuario', // Texto del campo
-                        hintText: 'Umetale@gmail.com', // Texto de ayuda
+                        labelText: 'Nombre de Usuario',
+                        hintText: 'admin',
                         suffixIcon: _emailValid
-                            ? const Icon(Icons.check_circle, color: Colors.green) // Ícono de validación
-                            : null, // Si la validación es falsa, no muestra el ícono
+                            ? const Icon(Icons.check_circle, color: Colors.green)
+                            : null,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10), // Bordes redondeados
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 18), // Espaciado entre el campo de texto y la contraseña
-
-                    // Campo de texto para la contraseña
+                    const SizedBox(height: 18),
                     TextField(
-                      obscureText: _obscurePassword, // Hace la contraseña invisible por defecto
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
                       decoration: InputDecoration(
-                        labelText: 'Contraseña', // Texto del campo
+                        labelText: 'Contraseña',
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off // Ícono para ocultar la contraseña
-                                : Icons.visibility, // Ícono para mostrar la contraseña
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
                             color: Colors.grey,
                           ),
                           onPressed: () {
                             setState(() {
-                              _obscurePassword = !_obscurePassword; // Cambia el estado de visibilidad de la contraseña
+                              _obscurePassword = !_obscurePassword;
                             });
                           },
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10), // Bordes redondeados
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24), // Espaciado entre los campos y el botón
-
-                    // Botón principal para iniciar sesión
+                    const SizedBox(height: 24),
                     TextButton(
                       style: TextButton.styleFrom(
                         textStyle: const TextStyle(
@@ -128,16 +176,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       child: const Text('Iniciar Sesión'),
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen()),
-                        );
-                      },
+                      onPressed: (_emailValid && _passwordController.text.trim().isNotEmpty)
+                          ? () {
+                              final username = _usernameController.text.trim();
+                              final password = _passwordController.text.trim();
+                              loginUsuario(username, password);
+                            }
+                          : null, // Deshabilitado si el email o la contraseña no son válidos
                     ),
-                    const SizedBox(height: 12), // Espaciado entre el botón y el texto para recuperar contraseña
-
-                    // Texto para recuperar la contraseña
+                    const SizedBox(height: 12),
                     TextButton(
                       onPressed: () {
                         Navigator.push(
@@ -157,85 +204,69 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 24), // Espaciado entre el formulario y los botones de redes sociales
-
-            // Texto para "Iniciar sesión con"
-            const Text(
-              'Sign In with',
-              style: TextStyle(fontSize: 14, color: Colors.black54), // Estilo del texto
-            ),
-            const SizedBox(height: 12), // Espaciado entre el texto y los botones de redes sociales
-
-            // Botón de Facebook
+            const SizedBox(height: 24),
+            const Text('Sign In with', style: TextStyle(fontSize: 14, color: Colors.black54)),
+            const SizedBox(height: 12),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 36), // Padding horizontal
+              padding: const EdgeInsets.symmetric(horizontal: 36),
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white, // Fondo blanco
-                  foregroundColor: Colors.black87, // Color del texto
-                  minimumSize: const Size.fromHeight(44), // Tamaño mínimo del botón
-                  side: const BorderSide(color: Color(0xFFE0E0E0)), // Borde gris claro
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black87,
+                  minimumSize: const Size.fromHeight(44),
+                  side: const BorderSide(color: Color(0xFFE0E0E0)),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8), // Bordes redondeados
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  elevation: 0, // Sin sombra
+                  elevation: 0,
                 ),
-                icon: const Icon(Icons.facebook, color: Color(0xFF1877F3)), // Ícono de Facebook
-                label: const Text('Continue with Facebook'), // Texto del botón
-                onPressed: () {}, // Lógica para el inicio con Facebook
+                icon: const Icon(Icons.facebook, color: Color(0xFF1877F3)),
+                label: const Text('Continue with Facebook'),
+                onPressed: () {},
               ),
             ),
-            const SizedBox(height: 10), // Espaciado entre los botones
-
-            // Botón de Google
+            const SizedBox(height: 10),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 36), // Padding horizontal
+              padding: const EdgeInsets.symmetric(horizontal: 36),
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white, // Fondo blanco
-                  foregroundColor: Colors.black87, // Color del texto
-                  minimumSize: const Size.fromHeight(44), // Tamaño mínimo del botón
-                  side: const BorderSide(color: Color(0xFFE0E0E0)), // Borde gris claro
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black87,
+                  minimumSize: const Size.fromHeight(44),
+                  side: const BorderSide(color: Color(0xFFE0E0E0)),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8), // Bordes redondeados
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  elevation: 0, // Sin sombra
+                  elevation: 0,
                 ),
                 icon: Image.asset(
-                  'assets/google_icon.png', // Icono de Google desde los assets
+                  'assets/google_icon.png',
                   height: 22,
                   width: 22,
                 ),
-                label: const Text('Continue with Google'), // Texto del botón
-                onPressed: () {}, // Lógica para el inicio con Google
+                label: const Text('Continue with Google'),
+                onPressed: () {},
               ),
             ),
-            const SizedBox(height: 24), // Espaciado entre el botón de Google y el footer
-
-            // Footer con enlace para registrar una nueva cuenta
+            const SizedBox(height: 24),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center, // Centra el contenido
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'New Member? ', // Texto de invitación para registrarse
-                  style: TextStyle(color: Colors.black54, fontSize: 14), // Estilo del texto
-                ),
+                const Text('New Member? ', style: TextStyle(color: Colors.black54, fontSize: 14)),
                 GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, '/register'); // Navega a la pantalla de registro
-                  },
+                  onTap: () => Navigator.pushNamed(context, '/register'),
                   child: const Text(
-                    'Sign up Here', // Texto para registrarse
+                    'Sign up Here',
                     style: TextStyle(
-                      color: Color(0xFF7A45D1), // Color morado
-                      fontWeight: FontWeight.bold, // Estilo en negrita
-                      fontSize: 14, // Tamaño del texto
+                      color: Color(0xFF7A45D1),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24), // Espaciado entre el footer y el final
+            const SizedBox(height: 24),
           ],
         ),
       ),

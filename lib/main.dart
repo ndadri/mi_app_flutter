@@ -1,5 +1,7 @@
 // Importación de los paquetes y pantallas necesarias
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; //importamos firebase
+import 'firebase_options.dart';
 import 'screens/login_screen.dart'; // Pantalla de login
 import 'screens/register_screen.dart'; // Pantalla de registro
 import 'screens/home_screen.dart'; // Pantalla de inicio
@@ -7,10 +9,15 @@ import 'screens/pet_detail_screen.dart'; // Pantalla de detalles de la mascota
 import 'screens/matches_screen.dart'; // Pantalla de matches
 import 'screens/perfil_screen.dart'; // Pantalla de perfil
 import 'screens/eventos_screen.dart'; // Pantalla de eventos
+import 'pages/test_conexion_page.dart';
 
 // Método principal que inicia la aplicación
-void main() {
-  runApp(const PetMatchApp()); // Llama a la app principal PetMatchApp
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Requerido antes de Firebase
+  await Firebase.initializeApp( // Inicializa Firebase
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const PetMatchApp()); // Ejecuta la app
 }
 
 
