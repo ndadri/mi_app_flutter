@@ -85,22 +85,22 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   // Encabezado arriba
                   Container(
-                    height: headerHeight,
+                    height: 100,
                     width: double.infinity,
                     decoration: const BoxDecoration(
                       color: Color(0xFF7A45D1), // Color de fondo morado
                       borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(12), // <-- Borde inferior izquierdo suave
-                        bottomRight: Radius.circular(12), // <-- Borde inferior derecho suave
+                        bottomLeft: Radius.circular(28), // <-- Borde inferior izquierdo suave
+                        bottomRight: Radius.circular(28), // <-- Borde inferior derecho suave
                       ),
                     ),
                     alignment: Alignment.bottomCenter, // Alinea el texto en la parte inferior
                     padding: EdgeInsets.only(bottom: headerPadding), // Espaciado en la parte inferior
                     child: Text(
-                      'Sexo entre mascotas', // Texto principal en el encabezado
+                      'PET MATCH', // Texto principal en el encabezado
                       style: TextStyle(
                         fontFamily: 'AntonSC', // <-- Aquí
-                        fontSize: headerFontSize, // Tamaño de la fuente
+                        fontSize: 44, // Tamaño de la fuente
                         fontWeight: FontWeight.bold, // Estilo de la fuente
                         color: Colors.white, // Color de la fuente blanco
                         letterSpacing: 1.5, // Espaciado entre letras
@@ -133,10 +133,8 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        
                         // Espaciado entre carta e información
                         SizedBox(height: isSmall ? 6 : 12), // <-- Menos espaciado
-                        
                         // INFORMACIÓN DE LA MASCOTA (más pequeña también)
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: cardPadding + 40), // <-- Mismo padding que la carta
@@ -227,17 +225,6 @@ class HomeScreen extends StatelessWidget {
                                   ],
                                 ),
                                 SizedBox(height: isSmall ? 8 : 12),
-                                
-                                // Intereses
-                                Wrap(
-                                  alignment: WrapAlignment.center,
-                                  spacing: 8,
-                                  runSpacing: 6,
-                                  children: [
-                                    _interestChip('📸 Fotografía de paisajes', isSmall),
-                                    _interestChip('🏋️ Ir al gimnasio', isSmall),
-                                  ],
-                                ),
                               ],
                             ),
                           ),

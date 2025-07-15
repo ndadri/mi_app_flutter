@@ -31,27 +31,49 @@ class MatchesScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFEDEDED), // Fondo gris claro de la pantalla
       body: Column(
         children: [
-          // Header personalizado con bordes redondeados
-          Container(
-            height: 120, // Altura del header
-            margin: const EdgeInsets.symmetric(horizontal: 16), // <-- Margen horizontal para hacer más estrecho
-            decoration: const BoxDecoration(
-              color: Color(0xFF7A45D1), // Fondo morado
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(12), // <-- Borde inferior izquierdo suave
-                bottomRight: Radius.circular(12), // <-- Borde inferior derecho suave
-              ),
-            ),
-            alignment: Alignment.bottomCenter, // Alinea el texto en la parte inferior
-            padding: const EdgeInsets.only(bottom: 16), // Espaciado en la parte inferior
-            child: const Text(
-              'Matches', // Título del header
-              style: TextStyle(
-                fontFamily: 'AntonSC', // Fuente consistente con el proyecto
-                fontSize: 32, // Tamaño de la fuente
-                fontWeight: FontWeight.bold, // Estilo de la fuente
-                color: Colors.white, // Color de la fuente blanco
-                letterSpacing: 1.5, // Espaciado entre letras
+          Align(
+            alignment: Alignment.topCenter,
+            child: FractionallySizedBox(
+              widthFactor: 1.0,
+              child: Container(
+                height: 100, // Aumenta la altura para dar espacio al padding superior
+                decoration: const BoxDecoration(
+                  color: Color(0xFF7A45D1),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(28),
+                    bottomRight: Radius.circular(28),
+                  ),
+                ),
+                alignment: Alignment.center,
+                padding: const EdgeInsets.only(top: 18, bottom: 16), // <-- Padding superior agregado
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Flecha a la izquierda
+                    Positioned(
+                      left: 0,
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: () {
+                          Navigator.of(context).pushReplacementNamed('/home');
+                        },
+                      ),
+                    ),
+                    // Título centrado
+                    const Center(
+                      child: Text(
+                        'Matches',
+                        style: TextStyle(
+                          fontFamily: 'AntonSC',
+                          fontSize: 44,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -119,12 +141,25 @@ class MatchesScreen extends StatelessWidget {
             // Nombre de la mascota debajo de la imagen
             Padding(
               padding: const EdgeInsets.all(8), // Padding alrededor del texto
-              child: Text(
-                nombre, // Nombre de la mascota
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600, // Fuente en negrita
-                  fontSize: 16, // Tamaño de la fuente
-                ),
+              child: Column(
+                children: [
+                  Text(
+                    nombre, // Nombre de la mascota
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600, // Fuente en negrita
+                      fontSize: 16, // Tamaño de la fuente
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    '¡Escríbeme!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.deepPurple,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             )
           ],

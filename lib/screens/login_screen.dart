@@ -133,13 +133,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24),
                     TextField(
                       controller: _usernameController,
-                      onChanged: _validateEmail, // Llamada a la validación del email
+                      onChanged: (_) => setState(() {}), // <-- Agrega esto
                       decoration: InputDecoration(
                         labelText: 'Nombre de Usuario',
                         hintText: 'admin',
-                        suffixIcon: _emailValid
-                            ? const Icon(Icons.check_circle, color: Colors.green)
-                            : null,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -149,6 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
+                      onChanged: (_) => setState(() {}), // <-- Agrega esto
                       decoration: InputDecoration(
                         labelText: 'Contraseña',
                         suffixIcon: IconButton(
@@ -176,13 +174,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       child: const Text('Iniciar Sesión'),
-                      onPressed: (_emailValid && _passwordController.text.trim().isNotEmpty)
+                      onPressed: (_usernameController.text.trim().isNotEmpty && _passwordController.text.trim().isNotEmpty)
                           ? () {
                               final username = _usernameController.text.trim();
                               final password = _passwordController.text.trim();
                               loginUsuario(username, password);
                             }
-                          : null, // Deshabilitado si el email o la contraseña no son válidos
+                          : null,
                     ),
                     const SizedBox(height: 12),
                     TextButton(

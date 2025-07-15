@@ -21,7 +21,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
           children: [
             // Header morado
             Container(
-              height: 180,
+              height: 100,
               width: double.infinity,
               decoration: const BoxDecoration(
                 color: Color(0xFF7A45D1),
@@ -31,16 +31,34 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 ),
               ),
               alignment: Alignment.bottomCenter,
-              padding: const EdgeInsets.only(bottom: 24),
-              child: const Text(
-                'Perfil',
-                style: TextStyle(
-                  fontFamily: 'AntonSC', // <-- Aquí
-                  fontSize: 44,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: 1.5,
-                ),
+              padding: const EdgeInsets.only(top: 18, bottom: 24), // <-- Cambia aquí: agrega top: 18
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Flecha a la izquierda
+                  Positioned(
+                    left: 0,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 32),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ),
+                  // Título centrado
+                  const Center(
+                    child: Text(
+                      'Perfil',
+                      style: TextStyle(
+                        fontFamily: 'AntonSC',
+                        fontSize: 44,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),

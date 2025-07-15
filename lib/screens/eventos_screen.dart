@@ -8,178 +8,327 @@ class EventosScreen extends StatefulWidget {
 }
 
 class _EventosScreenState extends State<EventosScreen> {
-  // Ejemplo de eventos
   final List<Map<String, dynamic>> eventos = [
     {
       'nombre': 'Paseo Canino',
       'fecha': '20/07/2025',
       'lugar': 'Parque La Carolina',
       'asistir': false,
-      'imagen': 'https://via.placeholder.com/80x80?text=Paseo+Canino',
+      'imagen': null,
     },
     {
       'nombre': 'Feria de Mascotas',
       'fecha': '25/07/2025',
       'lugar': 'Centro de Convenciones',
       'asistir': false,
-      'imagen': 'https://via.placeholder.com/80x80?text=Feria+de+Mascotas',
+      'imagen': null,
     },
   ];
 
+  // Controla si se muestra el modal de añadir evento
+  bool showAddEventDialog = false;
+
+  // Controladores para los campos del nuevo evento
+  final TextEditingController tituloCtrl = TextEditingController();
+  final TextEditingController fechaCtrl = TextEditingController();
+  final TextEditingController lugarCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    tituloCtrl.dispose();
+    fechaCtrl.dispose();
+    lugarCtrl.dispose();
+    super.dispose();
+  }
+
+  void openAddEventDialog() {
+    setState(() {
+      showAddEventDialog = true;
+      tituloCtrl.clear();
+      fechaCtrl.clear();
+      lugarCtrl.clear();
+    });
+  }
+
+  void confirmAddEvent() {
+    setState(() {
+      eventos.add({
+        'nombre': tituloCtrl.text,
+        'fecha': fechaCtrl.text,
+        'lugar': lugarCtrl.text,
+        'asistir': false,
+        'imagen': null,
+      });
+      showAddEventDialog = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFEDEDED),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Header morado
-            Container(
-              height: 180,
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Color(0xFF7A45D1),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
-                ),
-              ),
-              alignment: Alignment.bottomCenter,
-              padding: const EdgeInsets.only(bottom: 24),
-              child: const Text(
-                'Eventos',
-                style: TextStyle(
-                  fontFamily: 'AntonSC', // <-- Aquí
-                  fontSize: 44,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Lista de eventos
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: eventos.map((evento) {
-                  return Container(
-                    height: 220, // <-- Altura fija uniforme para todos los cuadros
-                    margin: const EdgeInsets.only(bottom: 20),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: const Color(0xFFEDEDED),
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                // Header morado
+                Container(
+                  height: 100,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF7A45D1),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(28),
+                      bottomRight: Radius.circular(28),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Contenido principal con imagen
-                        Expanded(
-                          flex: 3,
-                          child: Row(
-                            children: [
-                              // Información del evento (lado izquierdo)
-                              Expanded(
-                                flex: 2, // <-- Ocupa 2/3 del ancho
-                                child: Column(
+                  ),
+                  padding: const EdgeInsets.only(top: 18, bottom: 24),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Flecha a la izquierda
+                      Positioned(
+                        left: 0,
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 32),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ),
+                      // Título centrado
+                      const Center(
+                        child: Text(
+                          'Eventos',
+                          style: TextStyle(
+                            fontFamily: 'AntonSC',
+                            fontSize: 44,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Lista de eventos
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Column(
+                    children: eventos.map((evento) {
+                      return LayoutBuilder(
+                        builder: (context, constraints) {
+                          double maxWidth = constraints.maxWidth > 420 ? 420 : constraints.maxWidth;
+                          // Usamos MediaQuery para altura adaptable
+                          double cardHeight = MediaQuery.of(context).size.width < 400 ? 140 : 110;
+                          return Center(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: maxWidth,
+                                minWidth: 0,
+                              ),
+                              child: Container(
+                                height: cardHeight,
+                                margin: const EdgeInsets.only(bottom: 20),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.08),
+                                      blurRadius: 16,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      evento['nombre'],
-                                      style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF7A45D1),
-                                        fontFamily: 'AntonSC',
+                                    // Información del evento (lado izquierdo)
+                                    Expanded(
+                                      flex: 2,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment: MainAxisAlignment.center, // <-- centra verticalmente
+                                        children: [
+                                          Text(
+                                            evento['nombre']?.toUpperCase() ?? '',
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF7A45D1),
+                                              fontFamily: 'AntonSC',
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            'FECHA: ${evento['fecha']?.toUpperCase() ?? ''}',
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w900,
+                                              fontFamily: 'AntonSC',
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'LUGAR: ${evento['lugar']?.toUpperCase() ?? ''}',
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w900,
+                                              fontFamily: 'AntonSC',
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
                                       ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      'Fecha: ${evento['fecha']}',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.black87,
+                                    const SizedBox(width: 10),
+                                    // Imagen del evento (lado derecho)
+                                    Container(
+                                      width: 70,
+                                      height: 70,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        color: Colors.grey[200],
+                                        image: evento['imagen'] != null
+                                            ? DecorationImage(
+                                                image: NetworkImage(evento['imagen']),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : null,
                                       ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Lugar: ${evento['lugar']}',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.black87,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 16), // <-- Espacio entre texto e imagen
-                              // Imagen del evento (lado derecho)
-                              Container(
-                                width: 80, // <-- Ancho fijo para la imagen
-                                height: 80, // <-- Alto fijo para la imagen
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: Colors.grey[200], // <-- Color de fondo mientras carga
-                                  image: DecorationImage(
-                                    image: NetworkImage(
-                                      evento['imagen'] ?? 'https://via.placeholder.com/80x80?text=Evento'
-                                    ), // <-- URL de la imagen del evento
-                                    fit: BoxFit.cover,
-                                  ),
+                            ),
+                          );
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          floatingActionButton: FloatingActionButton(
+            backgroundColor: const Color(0xFF7A45D1),
+            foregroundColor: Colors.white,
+            onPressed: openAddEventDialog,
+            child: const Icon(Icons.add, size: 32),
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        ),
+        // Modal para añadir evento
+        if (showAddEventDialog)
+          Center(
+            child: Material(
+              type: MaterialType.transparency,
+              child: Center(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final double maxWidth = constraints.maxWidth < 400 ? constraints.maxWidth * 0.95 : 400;
+                    return SingleChildScrollView(
+                      child: Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 12,
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                        child: Container(
+                          width: maxWidth,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                'Añadir evento',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  color: Color(0xFF7A45D1),
+                                  fontFamily: 'AntonSC',
                                 ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              _inputField('Título', tituloCtrl),
+                              _inputField('Fecha', fechaCtrl),
+                              _inputField('Lugar', lugarCtrl),
+                              const SizedBox(height: 18),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  TextButton(
+                                    onPressed: () => setState(() => showAddEventDialog = false),
+                                    child: const Text(
+                                      'Cancelar',
+                                      style: TextStyle(
+                                        fontFamily: 'AntonSC',
+                                        color: Color(0xFF7A45D1),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF7A45D1),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                    onPressed: confirmAddEvent,
+                                    child: const Text(
+                                      'Confirmar',
+                                      style: TextStyle(
+                                        fontFamily: 'AntonSC',
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
-                        // Espaciador
-                        const SizedBox(height: 16),
-                        // Botón (altura fija)
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: evento['asistir']
-                                  ? Colors.green
-                                  : const Color(0xFF7A45D1),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              textStyle: const TextStyle(
-                                fontFamily: 'AntonSC',
-                                fontSize: 16,
-                              ),
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                evento['asistir'] = !evento['asistir'];
-                              });
-                            },
-                            icon: Icon(evento['asistir'] ? Icons.check : Icons.event_available),
-                            label: Text(evento['asistir'] ? 'Asistiendo' : 'Asistir'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-          ],
+          ),
+      ],
+    );
+  }
+
+  Widget _inputField(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(
+            fontFamily: 'AntonSC',
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF7A45D1),
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        ),
+        style: const TextStyle(
+          fontFamily: 'AntonSC',
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
