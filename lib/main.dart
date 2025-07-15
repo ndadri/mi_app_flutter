@@ -5,7 +5,8 @@ import 'screens/register_screen.dart'; // Pantalla de registro
 import 'screens/home_screen.dart'; // Pantalla de inicio
 import 'screens/pet_detail_screen.dart'; // Pantalla de detalles de la mascota
 import 'screens/matches_screen.dart'; // Pantalla de matches
-import 'screens/register_pet_screen.dart'; // Pantalla de registro de mascota
+import 'screens/perfil_screen.dart'; // Pantalla de perfil
+import 'screens/eventos_screen.dart'; // Pantalla de eventos
 
 // Método principal que inicia la aplicación
 void main() {
@@ -22,9 +23,23 @@ class PetMatchApp extends StatelessWidget {
       title: 'Pet Match', // Título de la aplicación
       debugShowCheckedModeBanner: false, // Desactiva el banner de depuración en el app
       theme: ThemeData(
-        fontFamily: 'Sans', // Establece la fuente de la aplicación
+        fontFamily: 'AntonSC', // <-- Aquí
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple), // Esquema de colores basado en un color semilla
         useMaterial3: true, // Habilita Material Design 3
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          selectedLabelStyle: TextStyle(fontFamily: 'AntonSC'),
+          unselectedLabelStyle: TextStyle(fontFamily: 'AntonSC'),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            textStyle: const TextStyle(fontFamily: 'AntonSC'),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            textStyle: const TextStyle(fontFamily: 'AntonSC'),
+          ),
+        ),
       ),
       initialRoute: '/', // Establece la ruta inicial de la app
       routes: {
@@ -32,8 +47,9 @@ class PetMatchApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(), // Ruta para la pantalla de registro
         '/home': (context) => const HomeScreen(), // Ruta para la pantalla de inicio
         '/pet_detail': (context) => const PetDetailScreen(), // Ruta para la pantalla de detalles de la mascota
-        '/register_pet': (context) => const RegisterPetScreen(), // Ruta para la pantalla de registro de mascota
         '/matches': (context) => const MatchesScreen(), // Ruta para la pantalla de matches
+        '/perfil': (context) => const PerfilScreen(), // Ruta para la pantalla de perfil
+        '/eventos': (context) => const EventosScreen(), // Nueva ruta para la pantalla de eventos
       },
     );
   }

@@ -42,9 +42,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Text(
                   'Pet Match',
                   style: TextStyle(
+                    fontFamily: 'AntonSC', // <-- Aquí
                     fontSize: 48,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
+                    letterSpacing: 1.5,
                   ),
                 ),
               ),
@@ -96,7 +98,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          textStyle: const TextStyle(fontSize: 18),
+                          textStyle: const TextStyle(
+                            fontFamily: 'AntonSC', // <-- Aplica la fuente aquí
+                            fontSize: 18,
+                            fontWeight: FontWeight.normal,
+                          ),
                         ),
                         child: const Text('Registrarse'),
                       ),
@@ -119,8 +125,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: TextField(
         controller: controller, // Controlador del campo de texto
         decoration: InputDecoration(
-          labelText: label, // Texto de la etiqueta
-          labelStyle: const TextStyle(color: Colors.black), // Estilo de la etiqueta
+          labelText: label,
+          labelStyle: const TextStyle(
+            fontFamily: 'AntonSC',
+            color: Colors.black54, // <-- Gris medio
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            letterSpacing: 1.2,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12), // Bordes redondeados
           ),
@@ -140,7 +152,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         obscureText: label == 'Contraseña' ? !_isPasswordVisible : !_isConfirmPasswordVisible, // Muestra/oculta la contraseña
         decoration: InputDecoration(
           labelText: label, // Texto de la etiqueta
-          labelStyle: const TextStyle(color: Colors.black), // Estilo de la etiqueta
+          labelStyle: const TextStyle(
+            fontFamily: 'AntonSC',
+            color: Colors.black54, // <-- Gris medio
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            letterSpacing: 1.2,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12), // Bordes redondeados
           ),
@@ -150,7 +168,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             icon: Icon(
               label == 'Contraseña'
                   ? (_isPasswordVisible ? Icons.visibility : Icons.visibility_off)
-                  : (_isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off), // Ícono de visibilidad
+                  : (_isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
               color: Colors.black,
             ),
             onPressed: () {

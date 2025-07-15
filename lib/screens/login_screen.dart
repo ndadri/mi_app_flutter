@@ -1,5 +1,7 @@
 // Importación del paquete Flutter para la interfaz de usuario
 import 'package:flutter/material.dart';
+import 'forgot_password_screen.dart';
+import 'home_screen.dart'; // <-- Importa tu pantalla de inicio
 
 // Clase principal para la pantalla de Login
 class LoginScreen extends StatefulWidget {
@@ -22,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             // Header con color morado y texto 'Pet Match'
             Container(
-              height: 150, // Altura del contenedor
+              height: 150, // Altura del contenedors
               width: double.infinity, // Toma todo el ancho de la pantalla
               decoration: const BoxDecoration(
                 color: Color(0xFF7A45D1), // Color morado
@@ -36,6 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: const Text(
                 'Pet Match', // Título principal de la app
                 style: TextStyle(
+                  fontFamily: 'AntonSC', // <-- Aquí
                   fontSize: 60, // Tamaño de la fuente
                   fontWeight: FontWeight.bold, // Fuente en negrita
                   color: Colors.white, // Color de texto blanco
@@ -65,12 +68,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch, // Alinea el contenido a la izquierda
                   children: [
                     const Text(
-                      'Iniciar Sesión', // Título del formulario
-                      textAlign: TextAlign.center, // Centra el texto
+                      'Iniciar Sesión',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 22, // Tamaño de la fuente
-                        fontWeight: FontWeight.w600, // Estilo de la fuente
-                        color: Colors.black87, // Color del texto
+                        fontFamily: 'AntonSC', // <-- Aquí, dentro de style
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
                       ),
                     ),
                     const SizedBox(height: 24), // Espaciado entre el título y el campo de texto
@@ -116,31 +120,36 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24), // Espaciado entre los campos y el botón
 
                     // Botón principal para iniciar sesión
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF7A45D1), // Color de fondo del botón
-                        foregroundColor: Colors.white, // Color del texto
-                        padding: const EdgeInsets.symmetric(vertical: 14), // Espaciado interno del botón
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8), // Bordes redondeados
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        textStyle: const TextStyle(
+                          fontFamily: 'AntonSC',
+                          fontSize: 16,
                         ),
-                        textStyle: const TextStyle(fontSize: 16), // Tamaño del texto
                       ),
+                      child: const Text('Iniciar Sesión'),
                       onPressed: () {
-                        Navigator.pushNamed(context, '/home'); // Navega a la pantalla de inicio después de login
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const HomeScreen()),
+                        );
                       },
-                      child: const Text('Iniciar Sesión'), // Texto del botón
                     ),
                     const SizedBox(height: 12), // Espaciado entre el botón y el texto para recuperar contraseña
 
                     // Texto para recuperar la contraseña
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                        );
+                      },
                       child: const Text(
-                        'Olvidaste tu Contraseña?', // Texto de recuperación
+                        'Olvidaste tu Contraseña?',
                         style: TextStyle(
-                          color: Colors.black54, // Color del texto
-                          fontSize: 14, // Tamaño del texto
+                          color: Colors.black54,
+                          fontSize: 14,
                         ),
                       ),
                     ),
