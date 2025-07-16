@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "610643579092",
+    "project_id": "petmatch-1004e",
+    "storage_bucket": "petmatch-1004e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:610643579092:android:2a33354272a9c2f887eb41",
+        "android_client_info": {
+          "package_name": "com.example.mi_app_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAS4yHACYlUVMroULHPSmvV8TjVUoULCWo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
