@@ -1,6 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -10,27 +10,49 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final TextEditingController usernameCtrl = TextEditingController();
-  final TextEditingController passwordCtrl = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
-  Future<void> registrarUsuario(String username, String password) async {
-    final url = Uri.parse('http://localhost:8080/api/pets'); // Cambia la URL por la de tu backend
+  // Función para registrar el usuario
+  Future<void> _registerUser() async {
+    final String username = _usernameController.text;
+    final String email = _emailController.text;
+    final String password = _passwordController.text;
+
+    // Verificar que los campos no estén vacíos
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Por favor, completa todos los campos')),
+      );
+      return;
+    }
+
+    // Crear el JSON con los datos del usuario
+    final userData = jsonEncode({
+      'username': username,
+      'email': email,
+      'password': password,
+    });
+
+    // Hacer la solicitud POST al backend para registrar el usuario
     final response = await http.post(
-      url,
+      Uri.parse('http://localhost:8080/api/register'), // Cambia la URL si es necesario
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'username': username,
-        'password': password,
-      }),
+      body: userData,
     );
 
     if (response.statusCode == 200) {
+      // Si la respuesta es exitosa, mostrar mensaje
+      final responseData = jsonDecode(response.body);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Usuario registrado correctamente')),
+        SnackBar(content: Text(responseData['message'])),
       );
     } else {
+      // Si hay un error, mostrar mensaje
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${response.statusCode}')),
+        SnackBar(content: Text('Error al registrar el usuario')),
       );
     }
   }
@@ -38,41 +60,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Registro de Usuario'),
-        backgroundColor: const Color(0xFF7A45D1),
-      ),
+      appBar: AppBar(title: const Text('Registrar Usuario')),
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
-              controller: usernameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Usuario',
-                border: OutlineInputBorder(),
-              ),
+              controller: _usernameController,
+              decoration: const InputDecoration(labelText: 'Nombre de usuario'),
             ),
-            const SizedBox(height: 16),
             TextField(
-              controller: passwordCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Contraseña',
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: 'Correo electrónico'),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7A45D1),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+            TextField(
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              decoration: InputDecoration(
+                labelText: 'Contraseña',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
               ),
-              onPressed: () {
-                registrarUsuario(usernameCtrl.text, passwordCtrl.text);
-              },
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _registerUser,
               child: const Text('Registrar'),
             ),
           ],
