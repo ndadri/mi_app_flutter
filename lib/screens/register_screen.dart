@@ -38,7 +38,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     // Hacer la solicitud POST al backend para registrar el usuario
     final response = await http.post(
-      Uri.parse('http://localhost:8080/api/register'), // Cambia la URL si es necesario
+      Uri.parse('http://localhost:8080/api/pets'), // Cambia la URL si es necesario
       headers: {'Content-Type': 'application/json'},
       body: userData,
     );

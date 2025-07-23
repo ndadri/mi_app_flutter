@@ -28,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> loginUsuario(String username, String password) async {
-    final url = Uri.parse('http://localhost:8080/api/login');
+    final url = Uri.parse('http://localhost:8080/api/pets');
 
     try {
       final response = await http.post(
