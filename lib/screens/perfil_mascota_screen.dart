@@ -1,20 +1,18 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
+// Define la clase Mascota correctamente
+class Mascota {
+  final String nombre;
+  final String edad;
+  final String tipo;
+  final String raza;
+  final String sexo;
+  final String ciudad;
+  final String estado;
+  final String? fotoPath; // Si quieres guardar la ruta de la foto
 
-class PerfilMascotaScreen extends StatefulWidget {
-  const PerfilMascotaScreen({super.key});
-
-  @override
-  State<PerfilMascotaScreen> createState() => _PerfilMascotaScreenState();
-}
-
-  String nombre;
-  String edad;
-  String tipo;
-  String raza;
-  String sexo;
-  String ciudad;
-  String estado;
   Mascota({
     required this.nombre,
     required this.edad,
@@ -23,10 +21,18 @@ class PerfilMascotaScreen extends StatefulWidget {
     required this.sexo,
     required this.ciudad,
     required this.estado,
+    this.fotoPath,
   });
 }
 
-  // ...existing code...
+class PerfilMascotaScreen extends StatefulWidget {
+  const PerfilMascotaScreen({super.key});
+
+  @override
+  State<PerfilMascotaScreen> createState() => _PerfilMascotaScreenState();
+}
+
+class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
   // Listas de tipos y razas
   final List<String> tiposAnimales = ['Perro', 'Gato'];
   final Map<String, List<String>> razasPorTipo = {
@@ -50,7 +56,6 @@ class PerfilMascotaScreen extends StatefulWidget {
       fotoPath: null,
     ),
   ];
-  // ...existing code...
   int? editingIndex; // null si es nueva, si no el índice a editar
 
   // Controla si se muestra el modal y si es edición o registro
@@ -69,6 +74,9 @@ class PerfilMascotaScreen extends StatefulWidget {
   final TextEditingController ciudadCtrl = TextEditingController();
   final TextEditingController estadoCtrl = TextEditingController();
 
+  // Imagen temporal para el modal
+  File? pickedImageFile;
+
   @override
   void dispose() {
     nombreCtrl.dispose();
@@ -79,6 +87,16 @@ class PerfilMascotaScreen extends StatefulWidget {
     ciudadCtrl.dispose();
     estadoCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        pickedImageFile = File(picked.path);
+      });
+    }
   }
 
   void openEditCard({required bool edit, int? index}) {
@@ -97,6 +115,7 @@ class PerfilMascotaScreen extends StatefulWidget {
         sexoCtrl.text = mascota.sexo;
         ciudadCtrl.text = mascota.ciudad;
         estadoCtrl.text = mascota.estado;
+        pickedImageFile = mascota.fotoPath != null ? File(mascota.fotoPath!) : null;
       } else {
         nombreCtrl.clear();
         edadCtrl.clear();
@@ -107,6 +126,7 @@ class PerfilMascotaScreen extends StatefulWidget {
         sexoCtrl.clear();
         ciudadCtrl.clear();
         estadoCtrl.clear();
+        pickedImageFile = null;
       }
     });
   }
@@ -122,6 +142,7 @@ class PerfilMascotaScreen extends StatefulWidget {
           sexo: sexoCtrl.text,
           ciudad: ciudadCtrl.text,
           estado: estadoCtrl.text,
+          fotoPath: pickedImageFile?.path,
         );
       } else {
         mascotas.add(Mascota(
@@ -132,9 +153,11 @@ class PerfilMascotaScreen extends StatefulWidget {
           sexo: sexoCtrl.text,
           ciudad: ciudadCtrl.text,
           estado: estadoCtrl.text,
+          fotoPath: pickedImageFile?.path,
         ));
       }
       showDialogCard = false;
+      pickedImageFile = null;
     });
   }
 
@@ -151,13 +174,19 @@ class PerfilMascotaScreen extends StatefulWidget {
               double photoSize = MediaQuery.of(context).size.width * 0.28;
               if (photoSize < 90) photoSize = 90;
               if (photoSize > 140) photoSize = 140;
-              ImageProvider imageProvider = const NetworkImage('https://images.pexels.com/photos/4587995/pexels-photo-4587995.jpeg');
+              ImageProvider imageProvider;
+              if (mascota.fotoPath != null && mascota.fotoPath!.isNotEmpty) {
+                imageProvider = FileImage(File(mascota.fotoPath!));
+              } else {
+                imageProvider = const NetworkImage('https://images.pexels.com/photos/4587995/pexels-photo-4587995.jpeg');
+              }
               return Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
                 elevation: 4,
                 margin: const EdgeInsets.all(16),
+                color: const Color(0xFFE3D9F7), // Fondo más oscuro que el actual
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
                   child: Column(
@@ -302,20 +331,27 @@ class PerfilMascotaScreen extends StatefulWidget {
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 16),
-                              CircleAvatar(
-                                radius: 54,
-                                backgroundColor: Colors.grey[200],
-                                backgroundImage: const NetworkImage('https://images.pexels.com/photos/4587995/pexels-photo-4587995.jpeg'),
-                                child: Align(
+                              GestureDetector(
+                                onTap: pickImage,
+                                child: Stack(
                                   alignment: Alignment.bottomRight,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 54,
+                                      backgroundColor: Colors.grey[200],
+                                      backgroundImage: pickedImageFile != null
+                                          ? FileImage(pickedImageFile!)
+                                          : const NetworkImage('https://images.pexels.com/photos/4587995/pexels-photo-4587995.jpeg') as ImageProvider,
                                     ),
-                                    padding: const EdgeInsets.all(4),
-                                    child: const Icon(Icons.camera_alt, color: Color(0xFF7A45D1), size: 24),
-                                  ),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      padding: const EdgeInsets.all(4),
+                                      child: const Icon(Icons.camera_alt, color: Color(0xFF7A45D1), size: 24),
+                                    ),
+                                  ],
                                 ),
                               ),
                               const SizedBox(height: 12),
