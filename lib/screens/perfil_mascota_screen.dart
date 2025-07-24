@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 // Define la clase Mascota correctamente
 class Mascota {
@@ -93,9 +94,27 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      setState(() {
-        pickedImageFile = File(picked.path);
-      });
+      final cropped = await ImageCropper().cropImage(
+        sourcePath: picked.path,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Ajustar foto',
+            toolbarColor: Color(0xFF7A45D1),
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: false,
+          ),
+          IOSUiSettings(
+            title: 'Ajustar foto',
+            aspectRatioLockEnabled: false,
+          ),
+        ],
+      );
+      if (cropped != null) {
+        setState(() {
+          pickedImageFile = File(cropped.path);
+        });
+      }
     }
   }
 
@@ -303,7 +322,7 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
         if (showDialogCard)
           Center(
             child: Material(
-              type: MaterialType.transparency, // <-- Quita el fondo gris
+              type: MaterialType.transparency,
               child: Center(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -321,8 +340,9 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              const SizedBox(height: 8),
                               Text(
-                                isEditing ? 'Editar datos de mascota' : 'Registrar nueva mascota',
+                                isEditing ? 'Editar foto de la mascota' : 'Elegir foto de la mascota',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18,
@@ -334,30 +354,62 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
                               GestureDetector(
                                 onTap: pickImage,
                                 child: Stack(
-                                  alignment: Alignment.bottomRight,
+                                  alignment: Alignment.center,
                                   children: [
-                                    CircleAvatar(
-                                      radius: 54,
-                                      backgroundColor: Colors.grey[200],
-                                      backgroundImage: pickedImageFile != null
-                                          ? FileImage(pickedImageFile!)
-                                          : const NetworkImage('https://images.pexels.com/photos/4587995/pexels-photo-4587995.jpeg') as ImageProvider,
-                                    ),
                                     Container(
+                                      width: 120,
+                                      height: 120,
                                       decoration: BoxDecoration(
-                                        color: Colors.white,
                                         shape: BoxShape.circle,
+                                        color: Colors.grey[200],
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.18),
+                                            blurRadius: 16,
+                                            offset: const Offset(0, 6),
+                                          ),
+                                        ],
                                       ),
-                                      padding: const EdgeInsets.all(4),
-                                      child: const Icon(Icons.camera_alt, color: Color(0xFF7A45D1), size: 24),
+                                      child: ClipOval(
+                                        child: pickedImageFile != null
+                                            ? Image.file(
+                                                pickedImageFile!,
+                                                fit: BoxFit.cover,
+                                                width: 120,
+                                                height: 120,
+                                              )
+                                            : Image.network(
+                                                'https://images.pexels.com/photos/4587995/pexels-photo-4587995.jpeg',
+                                                fit: BoxFit.cover,
+                                                width: 120,
+                                                height: 120,
+                                              ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      bottom: 8,
+                                      right: 8,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.12),
+                                              blurRadius: 6,
+                                            ),
+                                          ],
+                                        ),
+                                        padding: const EdgeInsets.all(6),
+                                        child: const Icon(Icons.camera_alt, color: Color(0xFF7A45D1), size: 26),
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 18),
                               _inputField('Nombre', nombreCtrl),
                               _inputField('Edad', edadCtrl),
-                              // Dropdown para tipo de animal
                               Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 4),
                                 child: DropdownButtonFormField<String>(
@@ -376,13 +428,11 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
                                   onChanged: (value) {
                                     setState(() {
                                       selectedTipo = value;
-                                      // Reset raza si cambia tipo
                                       selectedRaza = null;
                                     });
                                   },
                                 ),
                               ),
-                              // Dropdown para raza
                               Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 4),
                                 child: DropdownButtonFormField<String>(
