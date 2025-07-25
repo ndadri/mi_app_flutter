@@ -1,168 +1,104 @@
-// Importación del paquete Flutter para la interfaz de usuario
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:mi_app_flutter/screens/perfil_screen.dart';
 
-// Clase principal para la pantalla de registro de nuevo usuario
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  // Controladores para los campos de texto (nombre de usuario, correo, contraseña)
-  final _nombreController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  bool _obscurePassword = true;
 
-  // Variables para controlar la visibilidad de las contraseñas
-  bool _isPasswordVisible = false; 
-  bool _isConfirmPasswordVisible = false;
+  // Función para registrar el usuario
+  Future<void> _registerUser() async {
+    final String username = _usernameController.text;
+    final String email = _emailController.text;
+    final String password = _passwordController.text;
+
+    // Verificar que los campos no estén vacíos
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Por favor, completa todos los campos')),
+      );
+      return;
+    }
+
+    // Crear el JSON con los datos del usuario
+    final userData = jsonEncode({
+      'username': username,
+      'email': email,
+      'password': password,
+    });
+
+    // Hacer la solicitud POST al backend para registrar el usuario
+    final response = await http.post(
+      Uri.parse('http://localhost:8080/api/pets'), // Cambia la URL si es necesario
+      headers: {'Content-Type': 'application/json'},
+      body: userData,
+    );
+
+    if (response.statusCode == 200) {
+      // Si la respuesta es exitosa, mostrar mensaje
+      final responseData = jsonDecode(response.body);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(responseData['message'])),
+      );
+    } else {
+      // Si hay un error, mostrar mensaje
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al registrar el usuario')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEDEDED),
-      body: SingleChildScrollView(
+      appBar: AppBar(title: const Text('Registrar Usuario')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Encabezado con fondo morado y esquinas inferiores redondeadas
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 40),
-              decoration: const BoxDecoration(
-                color: Color(0xFF7A45D1),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(40),
-                  bottomRight: Radius.circular(40),
-                ),
-              ),
-              child: const Center(
-                child: Text(
-                  'Pet Match',
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+            TextField(
+              controller: _usernameController,
+              decoration: const InputDecoration(labelText: 'Nombre de usuario'),
+            ),
+            TextField(
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: 'Correo electrónico'),
+            ),
+            TextField(
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              decoration: InputDecoration(
+                labelText: 'Contraseña',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
                   ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
                 ),
               ),
             ),
-            const SizedBox(height: 30),
-            Center(
-              child: Container(
-                width: 430,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(
-                      'Crear Cuenta',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    _buildTextField('Nombre de Usuario', _nombreController),
-                    _buildTextField('Correo Electrónico', _emailController),
-                    _buildPasswordField('Contraseña', _passwordController),
-                    _buildPasswordField('Confirmar Contraseña', _confirmPasswordController),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Lógica para registrar al usuario
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF7A45D1),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          textStyle: const TextStyle(fontSize: 18),
-                        ),
-                        child: const Text('Registrarse'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _registerUser,
+              child: const Text('Registrar'),
             ),
-            const SizedBox(height: 24),
           ],
-        ),
-      ),
-    );
-  }
-
-  // Función para construir campos de texto generales (nombre de usuario y correo)
-  Widget _buildTextField(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8), // Espaciado vertical entre los campos
-      child: TextField(
-        controller: controller, // Controlador del campo de texto
-        decoration: InputDecoration(
-          labelText: label, // Texto de la etiqueta
-          labelStyle: const TextStyle(color: Colors.black), // Estilo de la etiqueta
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12), // Bordes redondeados
-          ),
-          filled: true, // Activa el fondo relleno
-          fillColor: Colors.white, // Color de fondo blanco
-        ),
-      ),
-    );
-  }
-
-  // Función para construir los campos de contraseña con el botón para mostrar/ocultar la contraseña
-  Widget _buildPasswordField(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8), // Espaciado vertical entre los campos
-      child: TextField(
-        controller: controller, // Controlador del campo de texto
-        obscureText: label == 'Contraseña' ? !_isPasswordVisible : !_isConfirmPasswordVisible, // Muestra/oculta la contraseña
-        decoration: InputDecoration(
-          labelText: label, // Texto de la etiqueta
-          labelStyle: const TextStyle(color: Colors.black), // Estilo de la etiqueta
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12), // Bordes redondeados
-          ),
-          filled: true, // Activa el fondo relleno
-          fillColor: Colors.white, // Color de fondo blanco
-          suffixIcon: IconButton(
-            icon: Icon(
-              label == 'Contraseña'
-                  ? (_isPasswordVisible ? Icons.visibility : Icons.visibility_off)
-                  : (_isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off), // Ícono de visibilidad
-              color: Colors.black,
-            ),
-            onPressed: () {
-              setState(() {
-                if (label == 'Contraseña') {
-                  _isPasswordVisible = !_isPasswordVisible; // Cambia el estado de la contraseña
-                } else {
-                  _isConfirmPasswordVisible = !_isConfirmPasswordVisible; // Cambia el estado de la confirmación
-                }
-              });
-            },
-          ),
         ),
       ),
     );
