@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080/api';  // Cambia el host si es necesario
+  static const String baseUrl = 'http://localhost:3002/api';  // Cambia el host si es necesario
 
   // Función para obtener las mascotas desde el backend
   Future<List<dynamic>> fetchPets() async {

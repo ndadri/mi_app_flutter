@@ -21,7 +21,7 @@ class _TestConexionPageState extends State<TestConexionPage> {
 
   Future<void> obtenerMascotas() async {
     try {
-      final response = await http.get(Uri.parse('http://localhost:8080/api/pets'));
+      final response = await http.get(Uri.parse('http://localhost:3002/api/pets'));
 
       if (response.statusCode == 200) {
         setState(() {
