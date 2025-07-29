@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:mi_app_flutter/screens/perfil_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -25,7 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     // Verificar que los campos no estén vacíos
     if (username.isEmpty || email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Por favor, completa todos los campos')),
+        const SnackBar(content: Text('Por favor, completa todos los campos')),
       );
       return;
     }
@@ -53,7 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } else {
       // Si hay un error, mostrar mensaje
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al registrar el usuario')),
+        const SnackBar(content: Text('Error al registrar el usuario')),
       );
     }
   }

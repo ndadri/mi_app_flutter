@@ -8,7 +8,6 @@ class MatchesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Lista de matches, con nombre e imagen de cada mascota
     final List<Map<String, String>> matches = [
       {
         'nombre': 'Luna',
@@ -31,49 +30,27 @@ class MatchesScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFEDEDED), // Fondo gris claro de la pantalla
       body: Column(
         children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: FractionallySizedBox(
-              widthFactor: 1.0,
-              child: Container(
-                height: 100, // Aumenta la altura para dar espacio al padding superior
-                decoration: const BoxDecoration(
-                  color: Color(0xFF7A45D1),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(28),
-                    bottomRight: Radius.circular(28),
-                  ),
-                ),
-                alignment: Alignment.center,
-                padding: const EdgeInsets.only(top: 18, bottom: 16), // <-- Padding superior agregado
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Flecha a la izquierda
-                    Positioned(
-                      left: 0,
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: () {
-                          Navigator.of(context).pushReplacementNamed('/home');
-                        },
-                      ),
-                    ),
-                    // Título centrado
-                    const Center(
-                      child: Text(
-                        'Matches',
-                        style: TextStyle(
-                          fontFamily: 'AntonSC',
-                          fontSize: 44,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+          // Header morado personalizado
+          Container(
+            height: 120,
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Color(0xFF7A45D1),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(35),
+                bottomRight: Radius.circular(35),
+              ),
+            ),
+            alignment: Alignment.bottomCenter,
+            padding: const EdgeInsets.only(bottom: 24),
+            child: const Text(
+              'Matches',
+              style: TextStyle(
+                fontSize: 38,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 1.5,
+                fontFamily: 'AntonSC', // Usa tu fuente si la tienes
               ),
             ),
           ),

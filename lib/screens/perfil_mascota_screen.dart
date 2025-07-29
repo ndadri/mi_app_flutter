@@ -99,7 +99,7 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Ajustar foto',
-            toolbarColor: Color(0xFF7A45D1),
+            toolbarColor: const Color(0xFF7A45D1),
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: false,
@@ -299,7 +299,7 @@ class _PerfilMascotaScreenState extends State<PerfilMascotaScreen> {
                   ),
                 ),
               );
-            }).toList(),
+            }),
             const SizedBox(height: 24),
             // Botón para agregar nueva mascota (fuera de la tarjeta)
             FloatingActionButton.extended(

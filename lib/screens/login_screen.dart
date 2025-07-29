@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 import 'forgot_password_screen.dart';
 import 'home_screen.dart';
@@ -15,6 +14,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _emailValid = true;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -27,31 +28,14 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  Future<void> loginUsuario(String username, String password) async {
-    final url = Uri.parse('http://localhost:3002/api/login'); // Asegúrate de que la URL sea correcta
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'username': username, 'password': password}),
+  void loginUsuario(String username, String password) {
+    if (username == 'admin' && password == '1234') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        print('✅ Usuario autenticado: ${data['user']}');
-
-        // Redirigir al home (ajusta si usas otra ruta)
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      } else {
-        final error = jsonDecode(response.body);
-        _mostrarDialogoError(error['error']);
-      }
-    } catch (e) {
-      _mostrarDialogoError('No se pudo conectar con el servidor.\n$e');
+    } else {
+      _mostrarDialogoError('Usuario o contraseña incorrectos');
     }
   }
 
@@ -71,6 +55,30 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // Método para manejar el inicio de sesión
+  Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    // Validación local de credenciales fijas
+    await Future.delayed(const Duration(seconds: 1)); // Simula carga
+
+    if (_usernameController.text.trim() == 'admin' &&
+        _passwordController.text.trim() == '1234') {
+      setState(() {
+        _isLoading = false;
+      });
+      Navigator.pushNamed(context, '/home');
+    } else {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Usuario o contraseña incorrectos';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,22 +87,22 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           children: [
             Container(
-              height: 150,
+              height: 120,
               width: double.infinity,
               decoration: const BoxDecoration(
                 color: Color(0xFF7A45D1),
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(35),
-                  bottomRight: Radius.circular(35),
+                  bottomLeft: Radius.circular(28),
+                  bottomRight: Radius.circular(28),
                 ),
               ),
               alignment: Alignment.bottomCenter,
               padding: const EdgeInsets.only(bottom: 20),
               child: const Text(
-                'Pet Match',
+                'MATCHES',
                 style: TextStyle(
                   fontFamily: 'AntonSC',
-                  fontSize: 60,
+                  fontSize: 38,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   letterSpacing: 1.5,
@@ -136,7 +144,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       onChanged: (_) => setState(() {}), // <-- Agrega esto
                       decoration: InputDecoration(
                         labelText: 'Nombre de Usuario',
-                        hintText: 'admin',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -198,6 +216,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _errorMessage!,
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ],
                 ),
               ),

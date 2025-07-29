@@ -85,10 +85,10 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   // Encabezado arriba
                   Container(
-                    height: 100,
+                    height: 120,
                     width: double.infinity,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF7A45D1), // Color de fondo morado
+                      color: Color(0xFF7A45D1), // Morado sólido
                       borderRadius: BorderRadius.only(
                         bottomLeft: Radius.circular(28), // <-- Borde inferior izquierdo suave
                         bottomRight: Radius.circular(28), // <-- Borde inferior derecho suave

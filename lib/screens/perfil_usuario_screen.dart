@@ -75,9 +75,9 @@ class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Foto del usuario
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 54,
-                    backgroundImage: const NetworkImage(
+                    backgroundImage: NetworkImage(
                       'https://randomuser.me/api/portraits/men/1.jpg',
                     ),
                   ),

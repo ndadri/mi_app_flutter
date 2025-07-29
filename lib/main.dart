@@ -9,7 +9,6 @@ import 'screens/pet_detail_screen.dart'; // Pantalla de detalles de la mascota
 import 'screens/matches_screen.dart'; // Pantalla de matches
 import 'screens/perfil_screen.dart'; // Pantalla de perfil
 import 'screens/eventos_screen.dart'; // Pantalla de eventos
-import 'pages/test_conexion_page.dart';
 
 // Método principal que inicia la aplicación
 void main() async {
