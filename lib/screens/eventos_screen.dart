@@ -93,7 +93,7 @@ class _EventosScreenState extends State<EventosScreen> {
             children: [
               // Header morado
               Container(
-                height: 120,
+                height: 150,
                 width: double.infinity,
                 decoration: const BoxDecoration(
                   color: Color(0xFF7A45D1),
@@ -105,7 +105,7 @@ class _EventosScreenState extends State<EventosScreen> {
                 alignment: Alignment.bottomCenter,
                 padding: const EdgeInsets.only(bottom: 20),
                 child: const Text(
-                  'PET MATCH',
+                  'Eventos',
                   style: TextStyle(
                     fontFamily: 'AntonSC',
                     fontSize: 44,

@@ -85,10 +85,10 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   // Encabezado arriba
                   Container(
-                    height: 120,
+                    height: 90,
                     width: double.infinity,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF7A45D1), // Morado sólido
+                      color: Color(0xFF7A45D1), // Color de fondo morado
                       borderRadius: BorderRadius.only(
                         bottomLeft: Radius.circular(28), // <-- Borde inferior izquierdo suave
                         bottomRight: Radius.circular(28), // <-- Borde inferior derecho suave
@@ -96,7 +96,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     alignment: Alignment.bottomCenter, // Alinea el texto en la parte inferior
                     padding: EdgeInsets.only(bottom: headerPadding), // Espaciado en la parte inferior
-                    child: Text(
+                    child: const Text(
                       'PET MATCH', // Texto principal en el encabezado
                       style: TextStyle(
                         fontFamily: 'AntonSC', // <-- Aquí
@@ -177,7 +177,7 @@ class HomeScreen extends StatelessWidget {
                                       size: isSmall ? 12 : 14,
                                       color: Colors.grey[600],
                                     ),
-                                    SizedBox(width: 4),
+                                    const SizedBox(width: 4),
                                     Text(
                                       'Cerca - En Quito',
                                       style: TextStyle(
@@ -370,7 +370,7 @@ class HomeScreen extends StatelessWidget {
             size: isSmall ? 14 : 16,
             color: const Color(0xFF7A45D1),
           ),
-          SizedBox(width: 4),
+          const SizedBox(width: 4),
           Flexible(
             child: Text(
               text,

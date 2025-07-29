@@ -9,6 +9,7 @@ import 'screens/pet_detail_screen.dart'; // Pantalla de detalles de la mascota
 import 'screens/matches_screen.dart'; // Pantalla de matches
 import 'screens/perfil_screen.dart'; // Pantalla de perfil
 import 'screens/eventos_screen.dart'; // Pantalla de eventos
+import 'screens/admin_panel_screen.dart'; // Panel administrativo
 
 // Método principal que inicia la aplicación
 void main() async {
@@ -48,15 +49,16 @@ class PetMatchApp extends StatelessWidget {
           ),
         ),
       ),
-      initialRoute: '/', // Establece la ruta inicial de la app
+      initialRoute: '/login', // Establece la ruta inicial de la app
       routes: {
-        '/': (context) => const LoginScreen(), // Ruta para la pantalla de login
-        '/register': (context) => const RegisterScreen(), // Ruta para la pantalla de registro
-        '/home': (context) => const HomeScreen(), // Ruta para la pantalla de inicio
-        '/pet_detail': (context) => const PetDetailScreen(), // Ruta para la pantalla de detalles de la mascota
-        '/matches': (context) => const MatchesScreen(), // Ruta para la pantalla de matches
-        '/perfil': (context) => const PerfilScreen(), // Ruta para la pantalla de perfil
-        '/eventos': (context) => const EventosScreen(), // Nueva ruta para la pantalla de eventos
+        '/login': (context) => LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/pet_detail': (context) => const PetDetailScreen(),
+        '/matches': (context) => const MatchesScreen(),
+        '/perfil': (context) => const PerfilScreen(),
+        '/eventos': (context) => const EventosScreen(),
+        '/admin': (context) => AdminPanelScreen(), // Panel administrativo
       },
     );
   }

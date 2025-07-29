@@ -29,11 +29,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void loginUsuario(String username, String password) {
-    if (username == 'admin' && password == '1234') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+    if (username == 'admin' && password == 'admin123') {
+      Navigator.pushReplacementNamed(context, '/admin');
+    } else if (username == 'user' && password == 'user123') {
+      Navigator.pushReplacementNamed(context, '/home');
     } else {
       _mostrarDialogoError('Usuario o contraseña incorrectos');
     }
@@ -55,29 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Método para manejar el inicio de sesión
-  Future<void> _login() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    // Validación local de credenciales fijas
-    await Future.delayed(const Duration(seconds: 1)); // Simula carga
-
-    if (_usernameController.text.trim() == 'admin' &&
-        _passwordController.text.trim() == '1234') {
-      setState(() {
-        _isLoading = false;
-      });
-      Navigator.pushNamed(context, '/home');
-    } else {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Usuario o contraseña incorrectos';
-      });
-    }
-  }
+  // Elimina el método _login y usa solo loginUsuario
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           children: [
             Container(
-              height: 120,
+              height: 150,
               width: double.infinity,
               decoration: const BoxDecoration(
                 color: Color(0xFF7A45D1),
@@ -99,10 +76,10 @@ class _LoginScreenState extends State<LoginScreen> {
               alignment: Alignment.bottomCenter,
               padding: const EdgeInsets.only(bottom: 20),
               child: const Text(
-                'MATCHES',
+                'PET MATCH',
                 style: TextStyle(
                   fontFamily: 'AntonSC',
-                  fontSize: 38,
+                  fontSize: 50,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   letterSpacing: 1.5,
@@ -144,17 +121,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       onChanged: (_) => setState(() {}), // <-- Agrega esto
                       decoration: InputDecoration(
                         labelText: 'Nombre de Usuario',
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                            color: Colors.grey,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
