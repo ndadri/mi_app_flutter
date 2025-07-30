@@ -84,244 +84,251 @@ class _EventosScreenState extends State<EventosScreen> {
 
   @override
   Widget build(BuildContext context) {
-  print('EVENTOS: $eventos');
-    return Stack(
-      children: [
-        Scaffold(
-          backgroundColor: const Color(0xFFEDEDED),
-          body: Column(
-            children: [
-              // Header morado
-              Container(
-                height: 150,
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF7A45D1),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(28),
-                    bottomRight: Radius.circular(28),
-                  ),
-                ),
-                alignment: Alignment.bottomCenter,
-                padding: const EdgeInsets.only(bottom: 20),
-                child: const Text(
-                  'Eventos',
-                  style: TextStyle(
-                    fontFamily: 'AntonSC',
-                    fontSize: 44,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1.5,
-                  ),
-                ),
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+    final isTablet = width >= 600 && width < 1024;
+    final isDesktop = width >= 1024;
+    final double headerHeight = 90; // Altura fija en px para el header
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    // headerFontSize variable removed (not used)
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDEDED),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header unificado (ocupa todo el tope)
+          Container(
+            height: headerHeight + statusBarHeight,
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Color(0xFF7A45D1),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(28),
+                bottomRight: Radius.circular(28),
               ),
-              // Lista de eventos
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: eventos.isEmpty
-                      ? const Center(child: Text('No hay eventos'))
-                      : ListView.builder(
-                          padding: const EdgeInsets.only(top: 24, bottom: 80),
-                          itemCount: eventos.length,
-                          itemBuilder: (context, index) {
-                            final evento = eventos[index];
-                            return LayoutBuilder(
-                              builder: (context, constraints) {
-                                double maxWidth = constraints.maxWidth > 420 ? 420 : constraints.maxWidth;
-                                return Center(
-                                  child: ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      maxWidth: maxWidth,
-                                      minWidth: 0,
-                                    ),
-                                    child: Container(
-                                      margin: const EdgeInsets.only(bottom: 20),
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.08),
-                                            blurRadius: 16,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          // Información del evento (lado izquierdo)
-                                          Expanded(
-                                            flex: 2,
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  evento['nombre']?.toUpperCase() ?? '',
-                                                  style: TextStyle(
-                                                    fontSize: maxWidth < 350 ? 16 : 20,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: const Color(0xFF7A45D1),
-                                                    fontFamily: 'AntonSC',
-                                                  ),
-                                                  maxLines: 2,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                                const SizedBox(height: 6),
-                                                Text(
-                                                  'FECHA: ${evento['fecha']?.toUpperCase() ?? ''}',
-                                                  style: TextStyle(
-                                                    fontSize: maxWidth < 350 ? 12 : 15,
-                                                    color: Colors.grey[700], // <-- gris medio
-                                                    fontWeight: FontWeight.w900,
-                                                    fontFamily: 'AntonSC',
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 2),
-                                                Text(
-                                                  'HORA: ${evento['hora']?.toUpperCase() ?? ''}',
-                                                  style: TextStyle(
-                                                    fontSize: maxWidth < 350 ? 12 : 15,
-                                                    color: Colors.grey[700], // <-- gris medio
-                                                    fontWeight: FontWeight.w900,
-                                                    fontFamily: 'AntonSC',
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 2),
-                                                Text(
-                                                  'LUGAR: ${evento['lugar']?.toUpperCase() ?? ''}',
-                                                  style: TextStyle(
-                                                    fontSize: maxWidth < 350 ? 12 : 15,
-                                                    color: Colors.grey[700], // <-- gris medio
-                                                    fontWeight: FontWeight.w900,
-                                                    fontFamily: 'AntonSC',
-                                                  ),
-                                                  maxLines: 2,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          // Imagen del evento (lado derecho)
-                                          Container(
-                                            width: maxWidth < 350 ? 50 : 70,
-                                            height: maxWidth < 350 ? 50 : 70,
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(12),
-                                              color: Colors.grey[200],
-                                              image: evento['imagen'] != null
-                                                  ? DecorationImage(
-                                                      image: NetworkImage(evento['imagen']),
-                                                      fit: BoxFit.cover,
-                                                    )
-                                                  : null,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                ),
-              ),
-            ],
-          ),
-          floatingActionButton: FloatingActionButton(
-            backgroundColor: const Color(0xFF7A45D1),
-            foregroundColor: Colors.white,
-            onPressed: openAddEventDialog,
-            child: const Icon(Icons.add, size: 32),
-          ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-        ),
-        // Modal para añadir evento
-        if (showAddEventDialog)
-          Center(
-            child: Material(
-              type: MaterialType.transparency,
-              child: Center(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final double maxWidth = constraints.maxWidth < 400 ? constraints.maxWidth * 0.95 : 400;
-                    return SingleChildScrollView(
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        elevation: 12,
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                        child: Container(
-                          width: maxWidth,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                'Añadir evento',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  color: Color(0xFF7A45D1),
-                                  fontFamily: 'AntonSC',
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 16),
-                              _inputField('Título', tituloCtrl),
-                              _inputField('Fecha', fechaCtrl),
-                              _inputField('Hora', horaCtrl),
-                              _inputField('Lugar', lugarCtrl),
-                              const SizedBox(height: 18),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  TextButton(
-                                    onPressed: () => setState(() => showAddEventDialog = false),
-                                    child: const Text(
-                                      'Cancelar',
-                                      style: TextStyle(
-                                        fontFamily: 'AntonSC',
-                                        color: Color(0xFF7A45D1),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF7A45D1),
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                    ),
-                                    onPressed: confirmAddEvent,
-                                    child: const Text(
-                                      'Confirmar',
-                                      style: TextStyle(
-                                        fontFamily: 'AntonSC',
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+            ),
+            alignment: Alignment.center,
+            child: Padding(
+              padding: EdgeInsets.only(top: statusBarHeight + 10), // Puedes ajustar este número para mover el texto
+              child: const Text(
+                'EVENTOS',
+                style: TextStyle(
+                  fontFamily: 'AntonSC',
+                  fontSize: 44,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1.5,
                 ),
               ),
             ),
           ),
-      ],
+          // Lista de eventos
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: eventos.isEmpty
+                  ? const Center(child: Text('No hay eventos'))
+                  : ListView.builder(
+                      padding: const EdgeInsets.only(top: 24, bottom: 80),
+                      itemCount: eventos.length,
+                      itemBuilder: (context, index) {
+                        final evento = eventos[index];
+                        return LayoutBuilder(
+                          builder: (context, constraints) {
+                            double maxWidth = constraints.maxWidth > 420 ? 420 : constraints.maxWidth;
+                            return Center(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: maxWidth,
+                                  minWidth: 0,
+                                ),
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 20),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.08),
+                                        blurRadius: 16,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Información del evento (lado izquierdo)
+                                      Expanded(
+                                        flex: 2,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              evento['nombre']?.toUpperCase() ?? '',
+                                              style: TextStyle(
+                                                fontSize: maxWidth < 350 ? 16 : 20,
+                                                fontWeight: FontWeight.bold,
+                                                color: const Color(0xFF7A45D1),
+                                                fontFamily: 'AntonSC',
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              'FECHA: ${evento['fecha']?.toUpperCase() ?? ''}',
+                                              style: TextStyle(
+                                                fontSize: maxWidth < 350 ? 12 : 15,
+                                                color: Colors.grey[700],
+                                                fontWeight: FontWeight.w900,
+                                                fontFamily: 'AntonSC',
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              'HORA: ${evento['hora']?.toUpperCase() ?? ''}',
+                                              style: TextStyle(
+                                                fontSize: maxWidth < 350 ? 12 : 15,
+                                                color: Colors.grey[700],
+                                                fontWeight: FontWeight.w900,
+                                                fontFamily: 'AntonSC',
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              'LUGAR: ${evento['lugar']?.toUpperCase() ?? ''}',
+                                              style: TextStyle(
+                                                fontSize: maxWidth < 350 ? 12 : 15,
+                                                color: Colors.grey[700],
+                                                fontWeight: FontWeight.w900,
+                                                fontFamily: 'AntonSC',
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      // Imagen del evento (lado derecho)
+                                      Container(
+                                        width: maxWidth < 350 ? 50 : 70,
+                                        height: maxWidth < 350 ? 50 : 70,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(12),
+                                          color: Colors.grey[200],
+                                          image: evento['imagen'] != null
+                                              ? DecorationImage(
+                                                  image: NetworkImage(evento['imagen']),
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : null,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF7A45D1),
+        foregroundColor: Colors.white,
+        onPressed: openAddEventDialog,
+        child: const Icon(Icons.add, size: 32),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      // Barra de navegación inferior igual a home_screen
+      bottomNavigationBar: LayoutBuilder(
+        builder: (context, constraints) {
+          final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
+          final isDesktop = constraints.maxWidth >= 1024;
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 8,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                selectedItemColor: const Color(0xFF7A45D1),
+                unselectedItemColor: Colors.grey,
+                iconSize: isDesktop
+                    ? 40
+                    : isTablet
+                        ? 32
+                        : 22,
+                selectedFontSize: isDesktop
+                    ? 22
+                    : isTablet
+                        ? 16
+                        : 12,
+                unselectedFontSize: isDesktop
+                    ? 20
+                    : isTablet
+                        ? 14
+                        : 10,
+                currentIndex: 2,
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.favorite),
+                    label: 'Match',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.pets),
+                    label: 'Inicio',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.event),
+                    label: 'Eventos',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.person),
+                    label: 'Perfil',
+                  ),
+                ],
+                onTap: (index) {
+                  if (index == 0) {
+                    Navigator.pushNamedAndRemoveUntil(context, '/matches', (route) => false);
+                  } else if (index == 1) {
+                    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                  } else if (index == 2) {
+                    Navigator.pushNamedAndRemoveUntil(context, '/eventos', (route) => false);
+                  } else if (index == 3) {
+                    Navigator.pushNamedAndRemoveUntil(context, '/perfil', (route) => false);
+                  }
+                },
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 

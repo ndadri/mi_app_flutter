@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import 'forgot_password_screen.dart';
-import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _emailValid = true;
-  bool _isLoading = false;
+  final bool _isLoading = false;
   String? _errorMessage;
 
   final TextEditingController _usernameController = TextEditingController();
@@ -157,7 +155,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           fontSize: 16,
                         ),
                       ),
-                      child: const Text('Iniciar Sesión'),
                       onPressed: (_usernameController.text.trim().isNotEmpty && _passwordController.text.trim().isNotEmpty)
                           ? () {
                               final username = _usernameController.text.trim();
@@ -165,6 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               loginUsuario(username, password);
                             }
                           : null,
+                      child: const Text('Iniciar Sesión'),
                     ),
                     const SizedBox(height: 12),
                     TextButton(

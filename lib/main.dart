@@ -51,14 +51,15 @@ class PetMatchApp extends StatelessWidget {
       ),
       initialRoute: '/login', // Establece la ruta inicial de la app
       routes: {
-        '/login': (context) => LoginScreen(),
+        '/': (context) => const HomeScreen(),
+        '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
         '/pet_detail': (context) => const PetDetailScreen(),
         '/matches': (context) => const MatchesScreen(),
         '/perfil': (context) => const PerfilScreen(),
         '/eventos': (context) => const EventosScreen(),
-        '/admin': (context) => AdminPanelScreen(), // Panel administrativo
+        '/admin': (context) => const AdminPanelScreen(), // Panel administrativo
       },
     );
   }

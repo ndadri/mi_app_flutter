@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class ProfileValue extends StatelessWidget {
   final String text;
-  const ProfileValue(this.text);
+  const ProfileValue(this.text, {super.key});
+
   @override
   Widget build(BuildContext context) {
     return Text(
@@ -10,8 +11,9 @@ class ProfileValue extends StatelessWidget {
       style: const TextStyle(
         fontFamily: 'AntonSC',
         fontWeight: FontWeight.normal,
-        fontSize: 15,
+        fontSize: 14,
         color: Colors.black,
+        letterSpacing: 0.2,
       ),
     );
   }

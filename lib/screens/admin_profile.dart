@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+
 import 'edit_admin_profile_dialog.dart';
 import 'profile_label.dart';
 import 'profile_value.dart';
 
+
 class AdminProfile extends StatefulWidget {
-  const AdminProfile();
+  const AdminProfile({super.key});
   @override
   State<AdminProfile> createState() => AdminProfileState();
 }
@@ -48,6 +50,7 @@ class AdminProfileState extends State<AdminProfile> {
       width: double.infinity,
       child: Column(
         children: [
+          // Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.only(top: 32, bottom: 24),
@@ -71,6 +74,7 @@ class AdminProfileState extends State<AdminProfile> {
               ),
             ),
           ),
+          // Profile Card
           Expanded(
             child: Center(
               child: Container(
@@ -98,7 +102,7 @@ class AdminProfileState extends State<AdminProfile> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Expanded(
+                        Expanded(
                           flex: 2,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,13 +126,13 @@ class AdminProfileState extends State<AdminProfile> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               ProfileValue(nombres),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               ProfileValue(apellidos),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               ProfileValue(genero),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               ProfileValue(ubicacion),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               ProfileValue(fechaNacimiento),
                             ],
                           ),

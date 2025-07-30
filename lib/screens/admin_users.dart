@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
-import '../models/roles_permissions.dart';
+
 
 class User {
   String name;
   String email;
   String password;
   bool active;
-  UserRole role; // <--- nuevo campo
 
   User({
     required this.name,
     required this.email,
     required this.password,
     this.active = true,
-    this.role = UserRole.user, // valor por defecto
   });
 }
 
 class AdminUsers extends StatefulWidget {
-  const AdminUsers({Key? key}) : super(key: key);
+  const AdminUsers({super.key});
 
   @override
   State<AdminUsers> createState() => _AdminUsersState();
@@ -26,21 +24,17 @@ class AdminUsers extends StatefulWidget {
 
 class _AdminUsersState extends State<AdminUsers> {
   final List<User> _users = [
-    User(name: 'Juan Pérez', email: 'juan@mail.com', password: '123456', active: true, role: UserRole.admin),
-    User(name: 'Ana López', email: 'ana@mail.com', password: 'abcdef', active: false, role: UserRole.assistant),
-    User(name: 'Carlos Ruiz', email: 'carlos@mail.com', password: 'qwerty', active: true, role: UserRole.user),
+    User(name: 'Juan Pérez', email: 'juan@mail.com', password: '123456', active: true),
+    User(name: 'Ana López', email: 'ana@mail.com', password: 'abcdef', active: false),
+    User(name: 'Carlos Ruiz', email: 'carlos@mail.com', password: 'qwerty', active: true),
   ];
-
-  // Simula el usuario logueado (puedes cambiar el rol para probar)
-  UserRole currentUserRole = UserRole.admin;
   String _search = '';
 
   void _showCreateUserDialog() {
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     String name = '';
     String email = '';
     String password = '';
-    UserRole role = UserRole.user;
 
     showDialog(
       context: context,
@@ -48,7 +42,7 @@ class _AdminUsersState extends State<AdminUsers> {
         return AlertDialog(
           title: const Text('Crear nuevo usuario'),
           content: Form(
-            key: _formKey,
+            key: formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -68,15 +62,6 @@ class _AdminUsersState extends State<AdminUsers> {
                   validator: (value) => value == null || value.length < 6 ? 'Mínimo 6 caracteres' : null,
                   onChanged: (value) => password = value,
                 ),
-                DropdownButtonFormField<UserRole>(
-                  value: role,
-                  decoration: const InputDecoration(labelText: 'Rol'),
-                  items: UserRole.values.map((r) => DropdownMenuItem(
-                    value: r,
-                    child: Text(r.name),
-                  )).toList(),
-                  onChanged: (value) => role = value!,
-                ),
               ],
             ),
           ),
@@ -87,9 +72,9 @@ class _AdminUsersState extends State<AdminUsers> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (_formKey.currentState!.validate()) {
+                if (formKey.currentState!.validate()) {
                   setState(() {
-                    _users.add(User(name: name, email: email, password: password, role: role));
+                    _users.add(User(name: name, email: email, password: password));
                   });
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -106,11 +91,11 @@ class _AdminUsersState extends State<AdminUsers> {
   }
 
   void _showEditUserDialog(int index) {
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     String name = _users[index].name;
     String email = _users[index].email;
     String password = _users[index].password;
-    UserRole role = _users[index].role;
+    // Eliminar campo de rol
 
     showDialog(
       context: context,
@@ -118,7 +103,7 @@ class _AdminUsersState extends State<AdminUsers> {
         return AlertDialog(
           title: const Text('Editar usuario'),
           content: Form(
-            key: _formKey,
+            key: formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -141,15 +126,7 @@ class _AdminUsersState extends State<AdminUsers> {
                   validator: (value) => value == null || value.length < 6 ? 'Mínimo 6 caracteres' : null,
                   onChanged: (value) => password = value,
                 ),
-                DropdownButtonFormField<UserRole>(
-                  value: role,
-                  decoration: const InputDecoration(labelText: 'Rol'),
-                  items: UserRole.values.map((r) => DropdownMenuItem(
-                    value: r,
-                    child: Text(r.name),
-                  )).toList(),
-                  onChanged: (value) => role = value!,
-                ),
+                // Eliminado campo de rol
               ],
             ),
           ),
@@ -160,12 +137,12 @@ class _AdminUsersState extends State<AdminUsers> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (_formKey.currentState!.validate()) {
+                if (formKey.currentState!.validate()) {
                   setState(() {
                     _users[index].name = name;
                     _users[index].email = email;
                     _users[index].password = password;
-                    _users[index].role = role;
+                    // Eliminado campo de rol
                   });
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -287,8 +264,7 @@ class _AdminUsersState extends State<AdminUsers> {
                       child: ListTile(
                         leading: Icon(user.active ? Icons.person : Icons.person_off, color: user.active ? Colors.green : Colors.red),
                         title: Text(user.name),
-                        subtitle: Text('${user.email}\nRol: ${user.role.name}'),
-                        isThreeLine: true,
+                        subtitle: Text(user.email),
                         trailing: PopupMenuButton<String>(
                           onSelected: (value) {
                             if (value == 'edit') {
@@ -297,16 +273,10 @@ class _AdminUsersState extends State<AdminUsers> {
                               _showDeleteUserDialog(origIndex);
                             }
                           },
-                          itemBuilder: (context) {
-                            final canEdit = AppPermissions.can(currentUserRole, 'edit_user');
-                            final canDelete = AppPermissions.can(currentUserRole, 'delete_user');
-                            return [
-                              if (canEdit)
-                                const PopupMenuItem(value: 'edit', child: Text('Editar')),
-                              if (canDelete)
-                                const PopupMenuItem(value: 'delete', child: Text('Eliminar/Desactivar')),
-                            ];
-                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(value: 'edit', child: Text('Editar')),
+                            const PopupMenuItem(value: 'delete', child: Text('Eliminar/Desactivar')),
+                          ],
                         ),
                       ),
                     );

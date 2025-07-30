@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'stat_button.dart';
+import 'stat_total_usuarios_action.dart';
+import 'stat_usuarios_activos_action.dart';
+import 'stat_usuarios_online_action.dart';
+import 'stat_promedio_mascotas_usuario_action.dart';
 
 class AdminStats extends StatelessWidget {
-  const AdminStats();
+  const AdminStats({super.key});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -35,11 +40,47 @@ class AdminStats extends StatelessWidget {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(16),
-              children: const [
-                Center(child: SizedBox(width: 340, child: StatButton(icon: Icons.groups, label: 'TOTAL DE USUARIOS'))),
-                Center(child: SizedBox(width: 340, child: StatButton(icon: Icons.person, label: 'USUARIOS ACTIVOS'))),
-                Center(child: SizedBox(width: 340, child: StatButton(icon: Icons.wifi, label: 'USUARIOS ONLINE'))),
-                Center(child: SizedBox(width: 340, child: StatButton(icon: Icons.show_chart, label: 'PROMEDIO MASCOTAS/USUARIO'))),
+              children: [
+                Center(
+                  child: SizedBox(
+                    width: 340,
+                    child: StatButton(
+                      icon: Icons.groups,
+                      label: 'TOTAL DE USUARIOS',
+                      onPressed: () => totalUsuariosAction(context),
+                    ),
+                  ),
+                ),
+                Center(
+                  child: SizedBox(
+                    width: 340,
+                    child: StatButton(
+                      icon: Icons.person,
+                      label: 'USUARIOS ACTIVOS',
+                      onPressed: () => usuariosActivosAction(context),
+                    ),
+                  ),
+                ),
+                Center(
+                  child: SizedBox(
+                    width: 340,
+                    child: StatButton(
+                      icon: Icons.wifi,
+                      label: 'USUARIOS ONLINE',
+                      onPressed: () => usuariosOnlineAction(context),
+                    ),
+                  ),
+                ),
+                Center(
+                  child: SizedBox(
+                    width: 340,
+                    child: StatButton(
+                      icon: Icons.show_chart,
+                      label: 'PROMEDIO MASCOTAS/USUARIO',
+                      onPressed: () => promedioMascotasUsuarioAction(context),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -49,32 +90,4 @@ class AdminStats extends StatelessWidget {
   }
 }
 
-class StatButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const StatButton({required this.icon, required this.label});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF7A45D1),
-          foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(56),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        icon: Icon(icon, size: 32),
-        label: Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'AntonSC',
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-        onPressed: () {},
-      ),
-    );
-  }
-}
+// StatButton ahora está en stat_button.dart y acepta onPressed

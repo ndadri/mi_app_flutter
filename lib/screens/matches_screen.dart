@@ -8,7 +8,13 @@ class MatchesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Lista de matches, con nombre e imagen de cada mascota
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+    final isTablet = width >= 600 && width < 1024;
+    final isDesktop = width >= 1024;
+    final double headerHeight = 90; // Altura fija en px para el header
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    // headerFontSize variable removed (not used)
     final List<Map<String, String>> matches = [
       {
         'nombre': 'Luna',
@@ -26,35 +32,33 @@ class MatchesScreen extends StatelessWidget {
             'https://images.pexels.com/photos/4587996/pexels-photo-4587996.jpeg'
       },
     ];
-
     return Scaffold(
-      backgroundColor: const Color(0xFFEDEDED), // Fondo gris claro de la pantalla
+      backgroundColor: const Color(0xFFEDEDED),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: FractionallySizedBox(
-              widthFactor: 1.0,
-              child: Container(
-                height: 150, // Aumenta la altura para dar espacio al padding superior
-                decoration: const BoxDecoration(
-                  color: Color(0xFF7A45D1),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(28),
-                    bottomRight: Radius.circular(28),
-                  ),
-                ),
-                alignment: Alignment.bottomCenter,
-                padding: const EdgeInsets.only(bottom: 20),// <-- Padding superior agregado
-                child: const Text(
-                  'MATCH',
-                  style: TextStyle(
-                    fontFamily: 'AntonSC',
-                    fontSize: 44,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1.5,
-                  ),
+          // Header unificado (ocupa todo el tope)
+          Container(
+            height: headerHeight + statusBarHeight,
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Color(0xFF7A45D1),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(28),
+                bottomRight: Radius.circular(28),
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Padding(
+              padding: EdgeInsets.only(top: statusBarHeight + 10), // Igual que en eventos_screen.dart
+              child: const Text(
+                'MATCH',
+                style: TextStyle(
+                  fontFamily: 'AntonSC',
+                  fontSize: 44,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1.5,
                 ),
               ),
             ),
@@ -62,28 +66,106 @@ class MatchesScreen extends StatelessWidget {
           // Contenido principal
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16), // Padding alrededor del contenido
-              child: matches.isEmpty // Si no hay matches, muestra mensaje
+              padding: const EdgeInsets.all(16),
+              child: matches.isEmpty
                   ? const Center(child: Text('No tienes matches aún 😢'))
                   : GridView.builder(
-                      // Si hay matches, muestra un GridView
-                      itemCount: matches.length, // Número de ítems en el GridView
+                      itemCount: matches.length,
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // El número de columnas en el GridView
-                        crossAxisSpacing: 12, // Espaciado entre las columnas
-                        mainAxisSpacing: 12, // Espaciado entre las filas
-                        childAspectRatio: 0.9, // Relación de aspecto de cada celda
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 0.9,
                       ),
                       itemBuilder: (context, index) {
-                        // Construcción de cada celda en el GridView
                         final match = matches[index];
                         return _matchCard(context, match['nombre']!, match['imagen']!);
-                        // Llama a la función _matchCard para construir cada tarjeta
                       },
                     ),
             ),
           ),
         ],
+      ),
+      // Barra de navegación inferior igual a home_screen
+      bottomNavigationBar: LayoutBuilder(
+        builder: (context, constraints) {
+          final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
+          final isDesktop = constraints.maxWidth >= 1024;
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 8,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                selectedItemColor: const Color(0xFF7A45D1),
+                unselectedItemColor: Colors.grey,
+                iconSize: isDesktop
+                    ? 40
+                    : isTablet
+                        ? 32
+                        : 22,
+                selectedFontSize: isDesktop
+                    ? 22
+                    : isTablet
+                        ? 16
+                        : 12,
+                unselectedFontSize: isDesktop
+                    ? 20
+                    : isTablet
+                        ? 14
+                        : 10,
+                currentIndex: 0,
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.favorite),
+                    label: 'Match',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.pets),
+                    label: 'Inicio',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.event),
+                    label: 'Eventos',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.person),
+                    label: 'Perfil',
+                  ),
+                ],
+                onTap: (index) {
+                  if (index == 0) {
+                    Navigator.pushNamedAndRemoveUntil(context, '/matches', (route) => false);
+                  } else if (index == 1) {
+                    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                  } else if (index == 2) {
+                    Navigator.pushNamedAndRemoveUntil(context, '/eventos', (route) => false);
+                  } else if (index == 3) {
+                    Navigator.pushNamedAndRemoveUntil(context, '/perfil', (route) => false);
+                  }
+                },
+              ),
+            ),
+          );
+        },
       ),
     );
   }
