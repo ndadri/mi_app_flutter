@@ -10,13 +10,14 @@ const pool = new Pool({
 // Ruta POST para registrar una mascota
 router.post('/registrar', async (req, res) => {
     try {
-        let { nombre, edad, tipo_animal, raza, foto_url, id_duenio } = req.body;
+        let { nombre, edad, tipo_animal, raza, foto_url, id_duenio, state } = req.body;
 
         // Trim all string fields if they exist
         nombre = typeof nombre === 'string' ? nombre.trim() : '';
         tipo_animal = typeof tipo_animal === 'string' ? tipo_animal.trim().toLowerCase() : '';
         raza = typeof raza === 'string' ? raza.trim() : '';
         foto_url = typeof foto_url === 'string' ? foto_url.trim() : '';
+        state = typeof state === 'string' ? state.trim().toLowerCase() : '';
 
         // Validate nombre
         if (!nombre || typeof nombre !== 'string' || nombre.length === 0) {
@@ -45,11 +46,15 @@ router.post('/registrar', async (req, res) => {
         if (!id_duenio || isNaN(idDuenioNum) || !Number.isInteger(idDuenioNum) || idDuenioNum <= 0) {
             return res.status(400).json({ mensaje: 'El id_duenio debe ser un número entero positivo.' });
         }
+        // Validate state
+        if (!['buscando pareja', 'soltero'].includes(state)) {
+            return res.status(400).json({ mensaje: "El estado debe ser 'buscando pareja' o 'soltero'." });
+        }
 
         // Insertar la mascota en la base de datos
         const query = `
-            INSERT INTO mascotas (nombre, edad, tipo_animal, raza, foto_url, id_duenio)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO mascotas (nombre, edad, tipo_animal, raza, foto_url, id_duenio, state)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *
         `;
         const values = [
@@ -58,7 +63,8 @@ router.post('/registrar', async (req, res) => {
             tipo_animal,
             raza,
             foto_url,
-            idDuenioNum
+            idDuenioNum,
+            state
         ];
 
         const result = await pool.query(query, values);
