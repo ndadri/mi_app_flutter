@@ -10,38 +10,45 @@ app.use(bodyParser.json());
 
 // Configura tu conexión a PostgreSQL
 const pool = new Pool({
-  user: 'TU_USUARIO',      // Cambia por tu usuario de PostgreSQL
+  user: 'edison',      // Cambia por tu usuario de PostgreSQL
   host: 'localhost',
-  database: 'TU_BASE',     // Cambia por el nombre de tu base de datos
-  password: 'TU_PASSWORD', // Cambia por tu contraseña
+  database: 'basefinalcreo',     // Cambia por el nombre de tu base de datos
+  password: '1234', // Cambia por tu contraseña
   port: 5432,
 });
 
-// Ruta para registrar usuario
 app.post('/api/register', async (req, res) => {
-  const { username, email, password } = req.body;
+  const { nombres, apellidos, correo, contraseña, genero, ubicacion, fecha_nacimiento } = req.body;
 
-  if (!username || !email || !password) {
+  if (
+    !nombres ||
+    !apellidos ||
+    !correo ||
+    !contraseña ||
+    !genero ||
+    !ubicacion ||
+    !fecha_nacimiento
+  ) {
     return res.status(400).json({ message: 'Todos los campos son requeridos.' });
   }
 
   try {
     // Verifica si el usuario ya existe
     const existe = await pool.query(
-      'SELECT * FROM usuarios WHERE email = $1 OR username = $2',
-      [email, username]
+      'SELECT * FROM usuarios WHERE correo = $1',
+      [correo]
     );
     if (existe.rows.length > 0) {
       return res.status(409).json({ message: 'El usuario ya existe.' });
     }
 
     // Encripta la contraseña
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(contraseña, 10);
 
     // Inserta el usuario en la base de datos
     await pool.query(
-      'INSERT INTO usuarios (username, email, password) VALUES ($1, $2, $3)',
-      [username, email, hashedPassword]
+      'INSERT INTO usuarios (nombres, apellidos, correo, contraseña, genero, ubicacion, fecha_nacimiento) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [nombres, apellidos, correo, hashedPassword, genero, ubicacion, fecha_nacimiento]
     );
 
     res.status(200).json({ message: 'Usuario registrado exitosamente.' });
