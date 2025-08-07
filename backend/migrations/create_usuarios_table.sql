@@ -7,5 +7,5 @@ CREATE TABLE IF NOT EXISTS usuarios (
     fecha_nacimiento DATE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     contraseña VARCHAR(255) NOT NULL,
-    state VARCHAR(20) NOT NULL
+    state BOOLEAN NOT NULL  /* TRUE = verificado, FALSE = no */
 );

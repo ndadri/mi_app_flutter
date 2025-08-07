@@ -18,7 +18,14 @@ router.post('/registrar', async (req, res) => {
         ubicacion = typeof ubicacion === 'string' ? ubicacion.trim() : '';
         email = typeof email === 'string' ? email.trim().toLowerCase() : '';
         contraseña = typeof contraseña === 'string' ? contraseña : '';
-        state = typeof state === 'string' ? state.trim().toLowerCase() : '';
+        // Accept state as string or boolean (for flexibility)
+        if (typeof state === 'boolean') {
+            // Already boolean, do nothing
+        } else if (typeof state === 'string') {
+            state = state.trim().toLowerCase();
+        } else {
+            state = '';
+        }
 
         // Validar nombre
         if (!nombre || nombre.length === 0) {
@@ -47,8 +54,15 @@ router.post('/registrar', async (req, res) => {
         if (!contraseña || contraseña.length < 6) {
             return res.status(400).json({ mensaje: 'La contraseña debe tener al menos 6 caracteres.' });
         }
-        // Validar state
-        if (!['verificado', 'no'].includes(state)) {
+        // Validar state y convertir a booleano
+        let stateBool;
+        if (typeof state === 'boolean') {
+            stateBool = state;
+        } else if (state === 'verificado') {
+            stateBool = true;
+        } else if (state === 'no') {
+            stateBool = false;
+        } else {
             return res.status(400).json({ mensaje: "El estado debe ser 'verificado' o 'no'." });
         }
 
@@ -69,16 +83,18 @@ router.post('/registrar', async (req, res) => {
             fecha_nacimiento,
             email,
             hashedPassword,
-            state
+            stateBool
         ];
 
         const result = await pool.query(query, values);
 
         // Devuelve el id del usuario para usar como id_duenio en petRoutes
+        const usuario = result.rows[0];
+        usuario.state = usuario.state ? 'verificado' : 'no';
         res.status(201).json({
             mensaje: 'Usuario registrado exitosamente.',
-            usuario: result.rows[0],
-            id_duenio: result.rows[0].id // Asumiendo que la columna primaria es 'id'
+            usuario,
+            id_duenio: usuario.id // Asumiendo que la columna primaria es 'id'
         });
     } catch (error) {
         console.error('Error al registrar usuario:', error);

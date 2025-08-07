@@ -12,12 +12,19 @@ router.post('/registrar', async (req, res) => {
     try {
         let { nombre, edad, tipo_animal, raza, foto_url, id_duenio, state } = req.body;
 
-        // Trim all string fields if they exist
+        // Trim and normalize all string fields
         nombre = typeof nombre === 'string' ? nombre.trim() : '';
         tipo_animal = typeof tipo_animal === 'string' ? tipo_animal.trim().toLowerCase() : '';
         raza = typeof raza === 'string' ? raza.trim() : '';
         foto_url = typeof foto_url === 'string' ? foto_url.trim() : '';
-        state = typeof state === 'string' ? state.trim().toLowerCase() : '';
+        // Accept state as string or boolean (for flexibility)
+        if (typeof state === 'boolean') {
+            // Already boolean, do nothing
+        } else if (typeof state === 'string') {
+            state = state.trim().toLowerCase();
+        } else {
+            state = '';
+        }
 
         // Validate nombre
         if (!nombre || typeof nombre !== 'string' || nombre.length === 0) {
@@ -46,8 +53,15 @@ router.post('/registrar', async (req, res) => {
         if (!id_duenio || isNaN(idDuenioNum) || !Number.isInteger(idDuenioNum) || idDuenioNum <= 0) {
             return res.status(400).json({ mensaje: 'El id_duenio debe ser un número entero positivo.' });
         }
-        // Validate state
-        if (!['buscando pareja', 'soltero'].includes(state)) {
+        // Validate state and convert to boolean
+        let stateBool;
+        if (typeof state === 'boolean') {
+            stateBool = state;
+        } else if (state === 'buscando pareja') {
+            stateBool = true;
+        } else if (state === 'soltero') {
+            stateBool = false;
+        } else {
             return res.status(400).json({ mensaje: "El estado debe ser 'buscando pareja' o 'soltero'." });
         }
 
@@ -64,14 +78,18 @@ router.post('/registrar', async (req, res) => {
             raza,
             foto_url,
             idDuenioNum,
-            state
+            stateBool
         ];
 
         const result = await pool.query(query, values);
 
+        // Respond with the registered pet info, converting state back to string for clarity
+        const mascota = result.rows[0];
+        mascota.state = mascota.state ? 'buscando pareja' : 'soltero';
+
         res.status(201).json({
             mensaje: 'Mascota registrada exitosamente.',
-            mascota: result.rows[0]
+            mascota
         });
     } catch (error) {
         console.error('Error al registrar mascota:', error);
