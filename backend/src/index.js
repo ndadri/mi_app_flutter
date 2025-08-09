@@ -50,9 +50,19 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Middleware de logging
+app.use((req, res, next) => {
+  console.log(`📝 ${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
 // Importar y usar las rutas de autenticación
 const authRoutes = require('../routes/authRoutes');
-app.use('/api/auth', authRoutes);
+const locationRoutes = require('../routes/locationRoutes');
+const passwordResetRoutes = require('../routes/passwordResetRoutes');
+app.use('/api', authRoutes);
+app.use('/api', locationRoutes);
+app.use('/api', passwordResetRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
@@ -157,8 +167,9 @@ async function startServer() {
     console.error('Error inicial de BD:', error.message);
   }
   
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+    console.log(`🌐 Servidor escuchando en todas las interfaces (0.0.0.0:${PORT})`);
     console.log(`📧 Email configurado: ${process.env.EMAIL_USER ? '✅' : '❌'}`);
     console.log(`🗄️ Base de datos: ${dbConnected ? '✅ Conectada' : '❌ Error de conexión'}`);
     console.log(`🔑 JWT Secret: ${process.env.JWT_SECRET ? '✅' : '❌'}`);

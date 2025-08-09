@@ -1,8 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'verification_code_screen.dart';
 
-class ForgotPasswordScreen extends StatelessWidget {
+class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
+
+  @override
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+}
+
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final _emailController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _sendResetCode() async {
+    if (_emailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor ingresa tu correo')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:3002/api/forgot-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': _emailController.text.trim()}),
+      );
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('✅ ${data['message']}')),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VerificationCodeScreen(
+              email: _emailController.text.trim(),
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('❌ ${data['message']}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +86,7 @@ class ForgotPasswordScreen extends StatelessWidget {
               child: const Text(
                 'Pet Match',
                 style: TextStyle(
-                  fontFamily: 'AntonSC', // <-- Aquí
+                  fontFamily: 'AntonSC',
                   fontSize: 54,
                   fontWeight: FontWeight.w900,
                   color: Colors.white,
@@ -75,6 +134,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
                     TextField(
+                      controller: _emailController,
                       decoration: InputDecoration(
                         labelText: 'Correo',
                         border: OutlineInputBorder(
@@ -83,21 +143,26 @@ class ForgotPasswordScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // Aquí cambiamos el ElevatedButton por TextButton
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        textStyle: const TextStyle(
-                          fontFamily: 'AntonSC', // Definimos la fuente
-                          fontSize: 16,
+                    // Botón actualizado con funcionalidad
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF7A45D1),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const VerificationCodeScreen()),
-                        );
-                      },
-                      child: const Text('Enviar código de verificación'),
+                      onPressed: _isLoading ? null : _sendResetCode,
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              'Enviar código de verificación',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ],
                 ),
