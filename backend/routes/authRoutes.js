@@ -141,11 +141,11 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Buscar usuario por correo o nombres
+        // Buscar usuario solo por correo
         const userQuery = `
-            SELECT id, nombres, apellidos, correo, contraseña, genero, ubicacion, fecha_nacimiento
+            SELECT id, correo, contraseña
             FROM usuarios 
-            WHERE correo = $1 OR nombres = $1
+            WHERE correo = $1
         `;
         const userResult = await pool.query(userQuery, [username]);
 
@@ -170,20 +170,20 @@ router.post('/login', async (req, res) => {
 
         // Generar JWT
         const token = jwt.sign(
-            { userId: user.id, correo: user.correo, nombres: user.nombres },
+            { userId: user.id, correo: user.correo },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
         // Login exitoso
-        console.log('✅ Login exitoso para usuario:', user.nombres);
+        console.log('✅ Login exitoso para usuario:', user.correo);
         
         // Eliminar la contraseña de la respuesta
         const { contraseña, ...userWithoutPassword } = user;
         
         res.status(200).json({
             success: true,
-            message: `¡Bienvenido ${user.nombres}!`,
+            message: `¡Bienvenido ${user.correo}!`,
             user: userWithoutPassword,
             token // <-- Aquí se retorna el JWT
         });
