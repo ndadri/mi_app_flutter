@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 // Configura tu conexión a la base de datos
 const pool = new Pool({
@@ -121,7 +122,8 @@ router.post('/registrar', async (req, res) => {
     }
 });
 
-// Ruta POST para login de usuario
+// Ruta POST para iniciar sesión
+
 router.post('/login', async (req, res) => {
     try {
         console.log('🔐 Intento de login:', JSON.stringify(req.body, null, 2));
@@ -166,6 +168,13 @@ router.post('/login', async (req, res) => {
             });
         }
 
+        // Generar JWT
+        const token = jwt.sign(
+            { userId: user.id, correo: user.correo, nombres: user.nombres },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
         // Login exitoso
         console.log('✅ Login exitoso para usuario:', user.nombres);
         
@@ -175,7 +184,8 @@ router.post('/login', async (req, res) => {
         res.status(200).json({
             success: true,
             message: `¡Bienvenido ${user.nombres}!`,
-            user: userWithoutPassword
+            user: userWithoutPassword,
+            token // <-- Aquí se retorna el JWT
         });
 
     } catch (error) {
@@ -186,5 +196,3 @@ router.post('/login', async (req, res) => {
         });
     }
 });
-
-module.exports = router;

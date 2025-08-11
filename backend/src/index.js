@@ -60,7 +60,7 @@ app.use((req, res, next) => {
 const authRoutes = require('../routes/authRoutes');
 const locationRoutes = require('../routes/locationRoutes');
 const passwordResetRoutes = require('../routes/passwordResetRoutes');
-app.use('/api', authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api', locationRoutes);
 app.use('/api', passwordResetRoutes);
 
