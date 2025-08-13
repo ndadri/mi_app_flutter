@@ -18,7 +18,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
     final height = MediaQuery.of(context).size.height;
     final isTablet = width >= 600 && width < 1024;
     final isDesktop = width >= 1024;
-    final double headerHeight = 90; // Altura fija en px para el header
+    const double headerHeight = 90; // Altura fija en px para el header
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     // headerFontSize variable removed (not used)
     return Scaffold(

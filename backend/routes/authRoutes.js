@@ -196,3 +196,119 @@ router.post('/login', async (req, res) => {
         });
     }
 });
+
+// Ruta POST para login social (Google/Facebook)
+router.post('/social-login', async (req, res) => {
+    try {
+        console.log('📱 Login social recibido:', JSON.stringify(req.body, null, 2));
+        
+        let { email, name, provider, photoURL } = req.body;
+
+        // Validaciones básicas
+        email = typeof email === 'string' ? email.trim().toLowerCase() : '';
+        name = typeof name === 'string' ? name.trim() : '';
+        provider = typeof provider === 'string' ? provider.trim() : '';
+        photoURL = typeof photoURL === 'string' ? photoURL.trim() : '';
+
+        if (!email || !name || !provider) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'Email, nombre y proveedor son obligatorios.' 
+            });
+        }
+
+        // Buscar si el usuario ya existe
+        const userQuery = `
+            SELECT id, nombres, apellidos, correo, genero, ubicacion, fecha_nacimiento, provider, photo_url
+            FROM usuarios 
+            WHERE correo = $1
+        `;
+        const userResult = await pool.query(userQuery, [email]);
+
+        let user;
+        
+        if (userResult.rows.length > 0) {
+            // Usuario existe, actualizar información del proveedor
+            user = userResult.rows[0];
+            
+            const updateQuery = `
+                UPDATE usuarios 
+                SET provider = $1, photo_url = $2, updated_at = CURRENT_TIMESTAMP
+                WHERE correo = $3
+                RETURNING id, nombres, apellidos, correo, genero, ubicacion, fecha_nacimiento, provider, photo_url
+            `;
+            const updateResult = await pool.query(updateQuery, [provider, photoURL, email]);
+            user = updateResult.rows[0];
+            
+            console.log('✅ Usuario existente actualizado:', user.correo);
+        } else {
+            // Usuario nuevo, crear registro
+            const insertQuery = `
+                INSERT INTO usuarios (nombres, apellidos, correo, contraseña, genero, ubicacion, fecha_nacimiento, provider, photo_url)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                RETURNING id, nombres, apellidos, correo, genero, ubicacion, fecha_nacimiento, provider, photo_url
+            `;
+            
+            // Separar nombre en nombres y apellidos
+            const nameParts = name.split(' ');
+            const firstName = nameParts[0] || name;
+            const lastName = nameParts.slice(1).join(' ') || '';
+            
+            // Contraseña temporal para usuarios sociales (no se usará)
+            const tempPassword = await bcrypt.hash('social_login_' + Date.now(), 10);
+            
+            const insertResult = await pool.query(insertQuery, [
+                firstName,
+                lastName,
+                email,
+                tempPassword,
+                'Prefiero no decirlo', // género por defecto
+                'No especificada', // ubicación por defecto
+                '2000-01-01', // fecha por defecto
+                provider,
+                photoURL
+            ]);
+            
+            user = insertResult.rows[0];
+            console.log('✅ Nuevo usuario social creado:', user.correo);
+        }
+
+        // Generar JWT token
+        const token = jwt.sign(
+            { 
+                userId: user.id, 
+                email: user.correo,
+                provider: user.provider 
+            },
+            process.env.JWT_SECRET || 'tu_jwt_secret_key',
+            { expiresIn: '7d' }
+        );
+
+        // Login exitoso
+        res.status(200).json({
+            success: true,
+            message: `¡Bienvenido ${user.nombres}!`,
+            user: {
+                id: user.id,
+                nombres: user.nombres,
+                apellidos: user.apellidos,
+                correo: user.correo,
+                genero: user.genero,
+                ubicacion: user.ubicacion,
+                fecha_nacimiento: user.fecha_nacimiento,
+                provider: user.provider,
+                photo_url: user.photo_url
+            },
+            token
+        });
+
+    } catch (error) {
+        console.error('❌ Error en login social:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Error interno del servidor: ' + error.message 
+        });
+    }
+});
+
+module.exports = router;

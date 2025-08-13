@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'report_item.dart';
 
 class AdminReports extends StatelessWidget {
-  const AdminReports();
+  const AdminReports({super.key});
   @override
   Widget build(BuildContext context) {
     return Container(

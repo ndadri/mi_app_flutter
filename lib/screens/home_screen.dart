@@ -12,245 +12,247 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFEDEDED), // Color gris claro para el fondo
 
       // Contenedor principal con SafeArea para evitar que el contenido se solape con la barra superior
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final height = constraints.maxHeight;
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final height = constraints.maxHeight;
 
-          // Ajustes responsivos
-          final isTablet = width >= 600 && width < 1024;
-          final isDesktop = width >= 1024;
-          final isSmall = width < 400;
+            // Ajustes responsivos
+            final isTablet = width >= 600 && width < 1024;
+            final isDesktop = width >= 1024;
+            final isSmall = width < 400;
 
-          final double headerHeight = 90; // Altura fija en px para el header
-          final cardHeight = isDesktop
-              ? height * 0.70
-              : isTablet
-                  ? height * 0.65
-                  : height * 0.50;
-          final cardPadding = isDesktop
-              ? width * 0.25
-              : isTablet
-                  ? width * 0.15
-                  : width * 0.05;
-          final cardBorderRadius = isDesktop
-              ? 36.0
-              : isTablet
-                  ? 28.0
-                  : 18.0;
-          final cardTextFont = isDesktop
-              ? 32.0
-              : isTablet
-                  ? 24.0
-                  : 18.0;
-          final cardSubTextFont = isDesktop
-              ? 26.0
-              : isTablet
-                  ? 18.0
-                  : 14.0;
-          final buttonSize = isDesktop
-              ? 100.0
-              : isTablet
-                  ? 80.0
-                  : 56.0;
-          final iconSize = isDesktop
-              ? 48.0
-              : isTablet
-                  ? 36.0
-                  : 26.0;
-          final headerFontSize = isDesktop
-              ? 48.0
-              : isTablet
-                  ? 36.0
-                  : 24.0;
-          final headerPadding = isDesktop
-              ? 40.0
-              : isTablet
-                  ? 28.0
-                  : 16.0;
-          final spaceBetween = isDesktop
-              ? 140.0
-              : isTablet
-                  ? 100.0
-                  : 60.0;
+            final headerHeight = isDesktop
+                ? height * 0.13
+                : isTablet
+                    ? height * 0.12
+                    : height * 0.10;
+            final cardHeight = isDesktop
+                ? height * 0.70
+                : isTablet
+                    ? height * 0.65
+                    : height * 0.50;
+            final cardPadding = isDesktop
+                ? width * 0.25
+                : isTablet
+                    ? width * 0.15
+                    : width * 0.05;
+            final cardBorderRadius = isDesktop
+                ? 36.0
+                : isTablet
+                    ? 28.0
+                    : 18.0;
+            final cardTextFont = isDesktop
+                ? 32.0
+                : isTablet
+                    ? 24.0
+                    : 18.0;
+            final cardSubTextFont = isDesktop
+                ? 26.0
+                : isTablet
+                    ? 18.0
+                    : 14.0;
+            final buttonSize = isDesktop
+                ? 100.0
+                : isTablet
+                    ? 80.0
+                    : 56.0;
+            final iconSize = isDesktop
+                ? 48.0
+                : isTablet
+                    ? 36.0
+                    : 26.0;
+            final headerFontSize = isDesktop
+                ? 48.0
+                : isTablet
+                    ? 36.0
+                    : 24.0;
+            final headerPadding = isDesktop
+                ? 40.0
+                : isTablet
+                    ? 28.0
+                    : 16.0;
+            final spaceBetween = isDesktop
+                ? 140.0
+                : isTablet
+                    ? 100.0
+                    : 60.0;
 
-          final double statusBarHeight = MediaQuery.of(context).padding.top;
-
-          return SizedBox.expand(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Encabezado arriba (ocupa todo el tope)
-                Container(
-                  height: headerHeight + statusBarHeight,
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF7A45D1),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(28),
-                      bottomRight: Radius.circular(28),
+            return SizedBox.expand(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Encabezado arriba
+                  Container(
+                    height: 120,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF7A45D1), // Morado sólido
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(28), // <-- Borde inferior izquierdo suave
+                        bottomRight: Radius.circular(28), // <-- Borde inferior derecho suave
+                      ),
                     ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Padding(
-                    padding: EdgeInsets.only(top: statusBarHeight + 12), // 12 para separar el texto del borde
+                    alignment: Alignment.bottomCenter, // Alinea el texto en la parte inferior
+                    padding: EdgeInsets.only(bottom: headerPadding), // Espaciado en la parte inferior
                     child: const Text(
-                      'PET MATCH',
+                      'PET MATCH', // Texto principal en el encabezado
                       style: TextStyle(
-                        fontFamily: 'AntonSC',
-                        fontSize: 44,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1.5,
+                        fontFamily: 'AntonSC', // <-- Aquí
+                        fontSize: 44, // Tamaño de la fuente
+                        fontWeight: FontWeight.bold, // Estilo de la fuente
+                        color: Colors.white, // Color de la fuente blanco
+                        letterSpacing: 1.5, // Espaciado entre letras
                       ),
                     ),
                   ),
-                ),
-                // Aquí centramos solo la tarjeta y los botones
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // CARD DE LA MASCOTA (más pequeña)
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: cardPadding + 40), // <-- Más padding para carta más pequeña
-                        child: Container(
-                          width: double.infinity,
-                          height: cardHeight * 0.6, // <-- Reducir altura
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(cardBorderRadius),
-                            boxShadow: const [
-                              BoxShadow(color: Colors.black26, blurRadius: 8),
-                            ],
-                            image: const DecorationImage(
-                              image: NetworkImage(
-                                'https://images.pexels.com/photos/4587995/pexels-photo-4587995.jpeg',
+                  // Aquí centramos solo la tarjeta y los botones
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // CARD DE LA MASCOTA (más pequeña)
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: cardPadding + 40), // <-- Más padding para carta más pequeña
+                          child: Container(
+                            width: double.infinity,
+                            height: cardHeight * 0.6, // <-- Reducir altura al 60% (antes era 80%)
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(cardBorderRadius),
+                              boxShadow: const [
+                                BoxShadow(color: Colors.black26, blurRadius: 8),
+                              ],
+                              image: const DecorationImage(
+                                image: NetworkImage(
+                                  'https://images.pexels.com/photos/4587995/pexels-photo-4587995.jpeg',
+                                ),
+                                fit: BoxFit.cover,
                               ),
-                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
-                      ),
-                      // Espaciado entre carta e información
-                      SizedBox(height: isSmall ? 6 : 12), // <-- Menos espaciado
-                      // INFORMACIÓN DE LA MASCOTA (más pequeña también)
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: cardPadding + 40), // <-- Mismo padding que la carta
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(isSmall ? 12 : 16), // <-- Menos padding interno
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(isSmall ? 12 : 16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // Nombre y edad
-                              Text(
-                                'Luna, 2 años',
-                                style: TextStyle(
-                                  fontFamily: 'AntonSC',
-                                  fontSize: cardTextFont * 0.8,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF7A45D1),
+                        // Espaciado entre carta e información
+                        SizedBox(height: isSmall ? 6 : 12), // <-- Menos espaciado
+                        // INFORMACIÓN DE LA MASCOTA (más pequeña también)
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: cardPadding + 40), // <-- Mismo padding que la carta
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(isSmall ? 12 : 16), // <-- Menos padding interno
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(isSmall ? 12 : 16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
                                 ),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: isSmall ? 4 : 8),
-                              
-                              // Ubicación
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.location_on,
-                                    size: isSmall ? 12 : 14,
-                                    color: Colors.grey[600],
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Nombre y edad
+                                Text(
+                                  'Luna, 2 años',
+                                  style: TextStyle(
+                                    fontFamily: 'AntonSC',
+                                    fontSize: cardTextFont * 0.8,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF7A45D1),
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Cerca - En Quito',
-                                    style: TextStyle(
-                                      fontSize: isSmall ? 10 : 12,
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: isSmall ? 4 : 8),
+                                
+                                // Ubicación
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.location_on,
+                                      size: isSmall ? 12 : 14,
                                       color: Colors.grey[600],
                                     ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: isSmall ? 6 : 10),
-                              
-                              // Descripción
-                              Text(
-                                'Soy buena onda',
-                                style: TextStyle(
-                                  fontSize: isSmall ? 11 : 13,
-                                  color: Colors.black87,
-                                  fontStyle: FontStyle.italic,
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Cerca - En Quito',
+                                      style: TextStyle(
+                                        fontSize: isSmall ? 10 : 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: isSmall ? 8 : 12),
-                              
-                              // Información en filas
-                              Column(
-                                children: [
-                                  // Tipo y Raza
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      _infoItem(Icons.pets, 'Perro', isSmall),
-                                      _infoItem(Icons.pets, 'Golden Retriever', isSmall), // <-- Cambiado de Icons.category a Icons.pets
-                                    ],
+                                SizedBox(height: isSmall ? 6 : 10),
+                                
+                                // Descripción
+                                Text(
+                                  'Soy buena onda',
+                                  style: TextStyle(
+                                    fontSize: isSmall ? 11 : 13,
+                                    color: Colors.black87,
+                                    fontStyle: FontStyle.italic,
                                   ),
-                                  SizedBox(height: isSmall ? 6 : 8),
-                                  
-                                  // Sexo y Estado
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      _infoItem(Icons.pets, 'Hembra', isSmall), // <-- Cambiado de Icons.wc a Icons.pets
-                                      _infoItem(Icons.check_circle, 'Disponible', isSmall),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: isSmall ? 8 : 12),
-                            ],
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: isSmall ? 8 : 12),
+                                
+                                // Información en filas
+                                Column(
+                                  children: [
+                                    // Tipo y Raza
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        _infoItem(Icons.pets, 'Perro', isSmall),
+                                        _infoItem(Icons.pets, 'Golden Retriever', isSmall), // <-- Cambiado de Icons.category a Icons.pets
+                                      ],
+                                    ),
+                                    SizedBox(height: isSmall ? 6 : 8),
+                                    
+                                    // Sexo y Estado
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        _infoItem(Icons.pets, 'Hembra', isSmall), // <-- Cambiado de Icons.wc a Icons.pets
+                                        _infoItem(Icons.check_circle, 'Disponible', isSmall),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: isSmall ? 8 : 12),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      
-                      // Espaciado antes de los botones
-                      SizedBox(height: isSmall ? 12 : 20), // <-- Menos espaciado
-                      
-                      // BOTONES DE LIKE Y DISLIKE
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _circleButton(Icons.close, Colors.redAccent, buttonSize, iconSize),
-                          SizedBox(width: isDesktop ? 60 : isTablet ? 48 : 40), // <-- Espacio entre botones optimizado
-                          _circleButton(Icons.favorite, Colors.green, buttonSize, iconSize),
-                        ],
-                      ),
-                      
-                      // Espaciado final
-                      SizedBox(height: isSmall ? 16 : 24), // <-- Espacio final
-                    ],
+                        
+                        // Espaciado antes de los botones
+                        SizedBox(height: isSmall ? 12 : 20), // <-- Menos espaciado
+                        
+                        // BOTONES DE LIKE Y DISLIKE
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _circleButton(Icons.close, Colors.redAccent, buttonSize, iconSize),
+                            SizedBox(width: isDesktop ? 60 : isTablet ? 48 : 40), // <-- Espacio entre botones optimizado
+                            _circleButton(Icons.favorite, Colors.green, buttonSize, iconSize),
+                          ],
+                        ),
+                        
+                        // Espaciado final
+                        SizedBox(height: isSmall ? 16 : 24), // <-- Espacio final
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
 
       // NAV INFERIOR - Barra de navegación en la parte inferior
@@ -320,13 +322,13 @@ class HomeScreen extends StatelessWidget {
                 ],
                 onTap: (index) {
                   if (index == 0) {
-                    Navigator.pushReplacementNamed(context, '/matches');
+                    Navigator.pushNamed(context, '/matches');
                   } else if (index == 1) {
-                    Navigator.pushReplacementNamed(context, '/home');
+                    // Inicio, no navega
                   } else if (index == 2) {
-                    Navigator.pushReplacementNamed(context, '/eventos');
+                    Navigator.pushNamed(context, '/eventos');
                   } else if (index == 3) {
-                    Navigator.pushReplacementNamed(context, '/perfil');
+                    Navigator.pushNamed(context, '/perfil');
                   }
                 },
               ),

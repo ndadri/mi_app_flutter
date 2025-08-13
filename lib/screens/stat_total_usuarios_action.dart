@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'stat_total_usuarios_action.dart';
 
 void totalUsuariosAction(BuildContext context) {
   showDialog(
@@ -27,9 +26,9 @@ void totalUsuariosAction(BuildContext context) {
                   ),
                 ],
               ),
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   Icon(Icons.groups, color: Colors.white, size: 32),
                   SizedBox(width: 16),
                   Text(

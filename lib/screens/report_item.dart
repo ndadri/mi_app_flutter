@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ReportItem extends StatelessWidget {
-  const ReportItem();
+  const ReportItem({super.key});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -21,10 +21,10 @@ class ReportItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'Reportado: Mia',
                   style: TextStyle(

@@ -1,26 +1,44 @@
 {
   "project_info": {
-    "project_number": "610643579092",
-    "project_id": "petmatch-1004e",
-    "storage_bucket": "petmatch-1004e.firebasestorage.app"
+    "project_number": "1033930402349",
+    "project_id": "petmach-2596f",
+    "storage_bucket": "petmach-2596f.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:610643579092:android:2a33354272a9c2f887eb41",
+        "mobilesdk_app_id": "1:1033930402349:android:b759dfa79748c23d0a66a4",
         "android_client_info": {
-          "package_name": "com.example.mi_app_flutter"
+          "package_name": "com.petmatch"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1033930402349-b69319sljout6b5gtjqs0suc1j9gtsdk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.petmatch",
+            "certificate_hash": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+          }
+        },
+        {
+          "client_id": "1033930402349-d064hi1k9hefcf0op18cqk5tahlb7cta.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyAS4yHACYlUVMroULHPSmvV8TjVUoULCWo"
+          "current_key": "AIzaSyCzrXodw5PmOUNgyo_SJ7hPQsAhBpiZcnk"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1033930402349-d064hi1k9hefcf0op18cqk5tahlb7cta.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

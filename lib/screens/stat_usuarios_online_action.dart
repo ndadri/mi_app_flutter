@@ -29,9 +29,9 @@ void usuariosOnlineAction(BuildContext context) {
                     ),
                   ],
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Icon(Icons.wifi, color: Colors.white, size: 32),
                     SizedBox(width: 16),
                     Text(
@@ -73,7 +73,7 @@ void usuariosOnlineAction(BuildContext context) {
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                 decoration: BoxDecoration(
-                  color: Color(0xFF35355A),
+                  color: const Color(0xFF35355A),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -83,9 +83,9 @@ void usuariosOnlineAction(BuildContext context) {
                     ),
                   ],
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Icon(Icons.wifi_off, color: Colors.white70, size: 28),
                     SizedBox(width: 14),
                     Text(

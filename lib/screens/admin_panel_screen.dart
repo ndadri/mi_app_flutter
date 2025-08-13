@@ -5,7 +5,7 @@ import 'admin_reports.dart';
 import 'admin_profile.dart';
 
 class AdminPanelScreen extends StatefulWidget {
-  const AdminPanelScreen({Key? key}) : super(key: key);
+  const AdminPanelScreen({super.key});
 
   @override
   State<AdminPanelScreen> createState() => _AdminPanelScreenState();
@@ -60,7 +60,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
                     ],
                   ),
                 ),
-                SizedBox(height: 18),
+                const SizedBox(height: 18),
               ],
             ),
             // Custom bottom bar with curves
@@ -86,11 +86,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
                 padding: const EdgeInsets.only(top: 8, bottom: 8),
                 child: TabBar(
                   controller: _tabController,
-                  indicator: UnderlineTabIndicator(
+                  indicator: const UnderlineTabIndicator(
                     borderSide: BorderSide(width: 3, color: Color(0xFF7A45D1)),
                     insets: EdgeInsets.symmetric(horizontal: 24),
                   ),
-                  labelColor: Color(0xFF7A45D1),
+                  labelColor: const Color(0xFF7A45D1),
                   unselectedLabelColor: Colors.black45,
                   labelStyle: const TextStyle(
                     fontFamily: 'AntonSC',
@@ -133,7 +133,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> with SingleTickerPr
 
 // Pantalla de bienvenida fullscreen
 class AdminWelcomeFullScreen extends StatelessWidget {
-  const AdminWelcomeFullScreen();
+  const AdminWelcomeFullScreen({super.key});
   @override
   Widget build(BuildContext context) {
     return Container(

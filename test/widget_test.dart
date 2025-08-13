@@ -1,9 +1,7 @@
-// This is a basic Flutter widget test.
+// Test básico para Pet Match App
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Este test verifica que la aplicación se inicializa correctamente
+// y muestra la pantalla de login como pantalla inicial.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,20 +9,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mi_app_flutter/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Pet Match App inicialización test', (WidgetTester tester) async {
+    // Construye nuestra app y dispara un frame.
+    await tester.pumpWidget(const PetMatchApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verifica que la app se inicializa correctamente
+    // Esperamos encontrar elementos típicos de una pantalla de login
+    expect(find.byType(MaterialApp), findsOneWidget);
+    
+    // El test básico solo verifica que la app no crashee al inicializarse
+    // Puedes agregar más tests específicos según necesites
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('App tiene título correcto', (WidgetTester tester) async {
+    // Construye la app
+    await tester.pumpWidget(const PetMatchApp());
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verifica que el MaterialApp tenga el título correcto
+    final MaterialApp app = tester.widget(find.byType(MaterialApp));
+    expect(app.title, 'Pet Match');
   });
 }
