@@ -102,7 +102,7 @@ class AdminProfileState extends State<AdminProfile> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
+                        const Expanded(
                           flex: 2,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,13 +126,13 @@ class AdminProfileState extends State<AdminProfile> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               ProfileValue(nombres),
-                              SizedBox(height: 8),
+                              const SizedBox(height: 8),
                               ProfileValue(apellidos),
-                              SizedBox(height: 8),
+                              const SizedBox(height: 8),
                               ProfileValue(genero),
-                              SizedBox(height: 8),
+                              const SizedBox(height: 8),
                               ProfileValue(ubicacion),
-                              SizedBox(height: 8),
+                              const SizedBox(height: 8),
                               ProfileValue(fechaNacimiento),
                             ],
                           ),

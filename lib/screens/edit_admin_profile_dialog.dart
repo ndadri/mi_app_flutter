@@ -6,7 +6,7 @@ class EditAdminProfileDialog extends StatefulWidget {
   final String genero;
   final String ubicacion;
   final String fechaNacimiento;
-  const EditAdminProfileDialog({
+  const EditAdminProfileDialog({super.key, 
     required this.nombres,
     required this.apellidos,
     required this.genero,
@@ -46,10 +46,10 @@ class EditAdminProfileDialogState extends State<EditAdminProfileDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
+            const Center(
               child: Text(
                 'EDITAR DATOS DE USUARIO',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'AntonSC',
                   fontWeight: FontWeight.bold,
                   fontSize: 20,

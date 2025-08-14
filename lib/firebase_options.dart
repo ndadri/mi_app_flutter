@@ -47,20 +47,20 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAMnoE1yJAeV4IsN4PiBKk1N4ZGHIezvOk',
-    appId: '1:610643579092:web:dddce346e5bee71787eb41',
-    messagingSenderId: '610643579092',
-    projectId: 'petmatch-1004e',
-    authDomain: 'petmatch-1004e.firebaseapp.com',
-    storageBucket: 'petmatch-1004e.firebasestorage.app',
+    apiKey: 'AIzaSyCzrXodw5PmOUNgyo_SJ7hPQsAhBpiZcnk',
+    appId: '1:1033930402349:web:XXXXXXXXXXXXXXX',
+    messagingSenderId: '1033930402349',
+    projectId: 'petmach-2596f',
+    authDomain: 'petmach-2596f.firebaseapp.com',
+    storageBucket: 'petmach-2596f.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAS4yHACYlUVMroULHPSmvV8TjVUoULCWo',
-    appId: '1:610643579092:android:2a33354272a9c2f887eb41',
-    messagingSenderId: '610643579092',
-    projectId: 'petmatch-1004e',
-    storageBucket: 'petmatch-1004e.firebasestorage.app',
+    apiKey: 'AIzaSyCzrXodw5PmOUNgyo_SJ7hPQsAhBpiZcnk',
+    appId: '1:1033930402349:android:b759dfa79748c23d0a66a4',
+    messagingSenderId: '1033930402349',
+    projectId: 'petmach-2596f',
+    storageBucket: 'petmach-2596f.firebasestorage.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

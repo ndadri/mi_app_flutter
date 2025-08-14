@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">Pet Match</string>
+    
+    <!-- Google Sign-In OAuth 2.0 Web Client ID de Firebase petmach-2596f -->
+    <string name="default_web_client_id">1033930402349-d064hi1k9hefcf0op18cqk5tahlb7cta.apps.googleusercontent.com</string>
+    
+    <!-- Facebook App ID -->
+    <string name="facebook_app_id">4144717029147439</string>
+    <string name="fb_login_protocol_scheme">fb4144717029147439</string>
+    <string name="facebook_client_token">e8f59fb641243be609124a9f7d4ba2b9</string>
+</resources>

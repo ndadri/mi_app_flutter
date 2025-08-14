@@ -58,11 +58,11 @@ app.use((req, res, next) => {
 
 // Importar y usar las rutas de autenticación
 const authRoutes = require('../routes/authRoutes');
-const locationRoutes = require('../routes/locationRoutes');
-const passwordResetRoutes = require('../routes/passwordResetRoutes');
-app.use('/api/auth', authRoutes);
-app.use('/api', locationRoutes);
-app.use('/api', passwordResetRoutes);
+//const locationRoutes = require('../routes/locationRoutes');
+//const passwordResetRoutes = require('../routes/passwordResetRoutes');
+app.use('/api', authRoutes);
+//app.use('/api', locationRoutes);
+//app.use('/api', passwordResetRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 

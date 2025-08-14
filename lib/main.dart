@@ -1,6 +1,7 @@
 // Importación de los paquetes y pantallas necesarias
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart'; //importamos firebase
+// Firebase habilitado para usar con Google Sign-In
+import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart'; // Pantalla de login
 import 'screens/register_screen.dart'; // Pantalla de registro
@@ -13,13 +14,13 @@ import 'screens/admin_panel_screen.dart'; // Panel administrativo
 
 // Método principal que inicia la aplicación
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Requerido antes de Firebase
-  await Firebase.initializeApp( // Inicializa Firebase
+  WidgetsFlutterBinding.ensureInitialized(); // Requerido para plugins
+  // Firebase habilitado para Google Sign-In
+  await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(const PetMatchApp()); // Ejecuta la app
 }
-
 
 // Clase principal de la aplicación
 class PetMatchApp extends StatelessWidget {

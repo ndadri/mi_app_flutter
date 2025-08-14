@@ -33,15 +33,15 @@ void promedioMascotasUsuarioAction(BuildContext context) {
                         ),
                       ],
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.show_chart, color: Colors.white, size: 32),
-                        const SizedBox(width: 16),
+                        Icon(Icons.show_chart, color: Colors.white, size: 32),
+                        SizedBox(width: 16),
                         Flexible(
                           child: Text(
                             'PROMEDIO MASCOTAS/USUARIO',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'AntonSC',
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
