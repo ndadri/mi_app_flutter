@@ -23,7 +23,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   // Cargar los mensajes del match desde el backend
   void _loadMessages() async {
-    final response = await http.get(Uri.parse('http://localhost:8080/api/match/${widget.matchId}/messages'));
+    final response = await http.get(Uri.parse('http://192.168.1.24:3002/api/match/${widget.matchId}/messages'));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -47,7 +47,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       };
 
       final response = await http.post(
-        Uri.parse('http://localhost:8080/api/match/${widget.matchId}/messages'),
+        Uri.parse('http://192.168.1.24:3002/api/match/${widget.matchId}/messages'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(message),
       );

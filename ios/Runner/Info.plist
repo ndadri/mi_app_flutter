@@ -51,5 +51,9 @@
 	<string>Necesitamos acceso a la cámara para tomar fotos de tu mascota.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Necesitamos acceso al micrófono para grabar videos.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Necesitamos acceso a tu ubicación para encontrar mascotas cerca de ti.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Necesitamos acceso a tu ubicación para encontrar mascotas cerca de ti.</string>
 </dict>
 </plist>
