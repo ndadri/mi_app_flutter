@@ -37,7 +37,10 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
     
     if (code.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor ingresa el código completo')),
+        const SnackBar(
+          content: Text('Por favor ingresa el código completo'),
+          duration: Duration(seconds: 1),
+        ),
       );
       return;
     }
@@ -48,7 +51,7 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3002/api/verify-reset-code'),
+        Uri.parse('http://192.168.1.24:3002/api/verify-reset-code'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'email': widget.email,
@@ -60,7 +63,10 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
 
       if (response.statusCode == 200 && data['success']) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ ${data['message']}')),
+          SnackBar(
+            content: Text('✅ ${data['message']}'),
+            duration: const Duration(seconds: 1),
+          ),
         );
         Navigator.pushReplacement(
           context,
@@ -73,12 +79,18 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ ${data['message']}')),
+          SnackBar(
+            content: Text('❌ ${data['message']}'),
+            duration: const Duration(seconds: 1),
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(
+          content: Text('Error: $e'),
+          duration: const Duration(seconds: 1),
+        ),
       );
     } finally {
       setState(() {

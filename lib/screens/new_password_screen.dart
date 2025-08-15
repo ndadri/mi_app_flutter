@@ -27,14 +27,20 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
   Future<void> _resetPassword() async {
     if (_passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor ingresa la nueva contraseña')),
+        const SnackBar(
+          content: Text('Por favor ingresa la nueva contraseña'),
+          duration: Duration(seconds: 1),
+        ),
       );
       return;
     }
 
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Las contraseñas no coinciden')),
+        const SnackBar(
+          content: Text('Las contraseñas no coinciden'),
+          duration: Duration(seconds: 1),
+        ),
       );
       return;
     }
@@ -45,7 +51,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3002/api/reset-password'),
+        Uri.parse('http://192.168.1.24:3002/api/reset-password'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'email': widget.email,
@@ -58,7 +64,10 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
 
       if (response.statusCode == 200 && data['success']) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ ${data['message']}')),
+          SnackBar(
+            content: Text('✅ ${data['message']}'),
+            duration: const Duration(seconds: 1),
+          ),
         );
         Navigator.pushAndRemoveUntil(
           context,
@@ -67,12 +76,18 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ ${data['message']}')),
+          SnackBar(
+            content: Text('❌ ${data['message']}'),
+            duration: const Duration(seconds: 1),
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(
+          content: Text('Error: $e'),
+          duration: const Duration(seconds: 1),
+        ),
       );
     } finally {
       setState(() {

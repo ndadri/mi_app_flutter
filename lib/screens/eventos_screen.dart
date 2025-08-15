@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import '../services/evento_service.dart';
 
 class EventosScreen extends StatefulWidget {
   const EventosScreen({super.key});
@@ -8,24 +11,8 @@ class EventosScreen extends StatefulWidget {
 }
 
 class _EventosScreenState extends State<EventosScreen> {
-  final List<Map<String, dynamic>> eventos = [
-    {
-      'nombre': 'Paseo Canino',
-      'fecha': '20/07/2025',
-      'hora': '10:00',
-      'lugar': 'Parque La Carolina',
-      'asistir': false,
-      'imagen': null,
-    },
-    {
-      'nombre': 'Feria de Mascotas',
-      'fecha': '25/07/2025',
-      'hora': '15:00',
-      'lugar': 'Centro de Convenciones',
-      'asistir': false,
-      'imagen': null,
-    },
-  ];
+  List<Map<String, dynamic>> eventos = [];
+  bool isLoading = true;
 
   // Controla si se muestra el modal de añadir evento
   bool showAddEventDialog = false;
@@ -36,15 +23,51 @@ class _EventosScreenState extends State<EventosScreen> {
   final TextEditingController horaCtrl = TextEditingController(); 
   final TextEditingController lugarCtrl = TextEditingController();
   
+  // Variables para manejo de imágenes
+  final ImagePicker _picker = ImagePicker();
+  File? _selectedImage;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarEventos();
+  }
 
   @override
   void dispose() {
     tituloCtrl.dispose();
     fechaCtrl.dispose();
-    horaCtrl.dispose(); 
+    horaCtrl.dispose();
     lugarCtrl.dispose();
-    
     super.dispose();
+  }
+
+  // Cargar eventos desde la base de datos
+  Future<void> _cargarEventos() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final resultado = await EventoService.obtenerEventos();
+    
+    if (resultado['success']) {
+      setState(() {
+        eventos = List<Map<String, dynamic>>.from(resultado['eventos']);
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(resultado['message'] ?? 'Error al cargar eventos'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void openAddEventDialog() {
@@ -54,43 +77,350 @@ class _EventosScreenState extends State<EventosScreen> {
       fechaCtrl.clear();
       horaCtrl.clear();
       lugarCtrl.clear();
-      // <-- Limpia el campo de hora
+      _selectedImage = null;
     });
+    _showAddEventModal();
   }
 
-  void confirmAddEvent() {
+  // Función para seleccionar imagen de la galería
+  Future<void> _selectImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1800,
+        maxHeight: 1800,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al seleccionar imagen: $e')),
+      );
+    }
+  }
+
+  // Función para mostrar diálogo de asistencia al evento
+  void _showAttendanceDialog(int index) {
+    final evento = eventos[index];
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            evento['nombre'],
+            style: const TextStyle(
+              fontFamily: 'AntonSC',
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF7A45D1),
+            ),
+          ),
+          content: const Text(
+            '¿Vas a asistir a este evento?',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _marcarAsistencia(evento['id'], false);
+              },
+              child: const Text(
+                'NO VOY',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _marcarAsistencia(evento['id'], true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF7A45D1),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'SÍ VOY',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Marcar asistencia en la base de datos
+  Future<void> _marcarAsistencia(int eventoId, bool asistira) async {
+    try {
+      final resultado = await EventoService.marcarAsistencia(
+        eventoId: eventoId,
+        asistira: asistira,
+      );
+
+      if (resultado['success']) {
+        // Recargar eventos para actualizar el estado
+        await _cargarEventos();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(asistira 
+                ? '¡Confirmado! Vas a asistir al evento' 
+                : 'Marcado como "No voy a asistir"'),
+              backgroundColor: asistira ? Colors.green : Colors.red,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(resultado['message'] ?? 'Error al marcar asistencia'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> confirmAddEvent() async {
     if (tituloCtrl.text.trim().isEmpty ||
         fechaCtrl.text.trim().isEmpty ||
         horaCtrl.text.trim().isEmpty ||
         lugarCtrl.text.trim().isEmpty) {
-      // Puedes mostrar un mensaje de error aquí si quieres
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Completa todos los campos')),
       );
       return;
     }
-    setState(() {
-      eventos.add({
-        'nombre': tituloCtrl.text,
-        'fecha': fechaCtrl.text,
-        'hora': horaCtrl.text,
-        'lugar': lugarCtrl.text,
-        'asistir': false,
-        'imagen': null,
-      });
-      showAddEventDialog = false;
-    });
+
+    // Mostrar indicador de carga
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final resultado = await EventoService.crearEvento(
+        nombre: tituloCtrl.text.trim(),
+        fecha: fechaCtrl.text.trim(),
+        hora: horaCtrl.text.trim(),
+        lugar: lugarCtrl.text.trim(),
+        imagen: _selectedImage,
+      );
+
+      // Cerrar indicador de carga
+      if (mounted) Navigator.of(context).pop();
+
+      if (resultado['success']) {
+        setState(() {
+          showAddEventDialog = false;
+          _selectedImage = null;
+        });
+        
+        // Cerrar modal
+        if (mounted) Navigator.of(context).pop();
+        
+        // Recargar eventos
+        await _cargarEventos();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('¡Evento creado exitosamente!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(resultado['message'] ?? 'Error al crear evento'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Cerrar indicador de carga
+      if (mounted) Navigator.of(context).pop();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Modal para agregar evento
+  void _showAddEventModal() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setStateModal) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Text(
+                'AGREGAR EVENTO',
+                style: TextStyle(
+                  fontFamily: 'AntonSC',
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF7A45D1),
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _inputField('Nombre del evento', tituloCtrl),
+                    _inputField('Fecha (DD/MM/YYYY)', fechaCtrl),
+                    _inputField('Hora (HH:MM)', horaCtrl),
+                    _inputField('Lugar', lugarCtrl),
+                    const SizedBox(height: 16),
+                    // Sección para imagen
+                    Container(
+                      width: double.infinity,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: _selectedImage != null
+                          ? Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    _selectedImage!,
+                                    width: double.infinity,
+                                    height: 150,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setStateModal(() {
+                                        _selectedImage = null;
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.image,
+                                  size: 48,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(height: 8),
+                                ElevatedButton.icon(
+                                  onPressed: () async {
+                                    await _selectImage();
+                                    setStateModal(() {});
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF7A45D1),
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  icon: const Icon(Icons.photo_library),
+                                  label: const Text('Seleccionar Imagen'),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      showAddEventDialog = false;
+                      _selectedImage = null;
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text(
+                    'CANCELAR',
+                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: confirmAddEvent,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF7A45D1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'AGREGAR',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
-    final isTablet = width >= 600 && width < 1024;
-    final isDesktop = width >= 1024;
-    const double headerHeight = 90; // Altura fija en px para el header
+    const double headerHeight = 90;
     final double statusBarHeight = MediaQuery.of(context).padding.top;
-    // headerFontSize variable removed (not used)
+
     return Scaffold(
       backgroundColor: const Color(0xFFEDEDED),
       body: Column(
@@ -109,7 +439,7 @@ class _EventosScreenState extends State<EventosScreen> {
             ),
             alignment: Alignment.center,
             child: Padding(
-              padding: EdgeInsets.only(top: statusBarHeight + 10), // Puedes ajustar este número para mover el texto
+              padding: EdgeInsets.only(top: statusBarHeight + 10),
               child: const Text(
                 'EVENTOS',
                 style: TextStyle(
@@ -126,8 +456,15 @@ class _EventosScreenState extends State<EventosScreen> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: eventos.isEmpty
-                  ? const Center(child: Text('No hay eventos'))
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : eventos.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No hay eventos disponibles',
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        )
                   : ListView.builder(
                       padding: const EdgeInsets.only(top: 24, bottom: 80),
                       itemCount: eventos.length,
@@ -142,93 +479,128 @@ class _EventosScreenState extends State<EventosScreen> {
                                   maxWidth: maxWidth,
                                   minWidth: 0,
                                 ),
-                                child: Container(
-                                  margin: const EdgeInsets.only(bottom: 20),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.08),
-                                        blurRadius: 16,
-                                        offset: const Offset(0, 8),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      // Información del evento (lado izquierdo)
-                                      Expanded(
-                                        flex: 2,
-                                        child: Column(
+                                child: GestureDetector(
+                                  onTap: () => _showAttendanceDialog(index),
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 20),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: (evento['asistira'] != null && evento['asistira'] == true)
+                                          ? Border.all(color: Colors.green, width: 3)
+                                          : Border.all(color: Colors.transparent),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.08),
+                                          blurRadius: 16,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        Row(
                                           crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            Text(
-                                              evento['nombre']?.toUpperCase() ?? '',
-                                              style: TextStyle(
-                                                fontSize: maxWidth < 350 ? 16 : 20,
-                                                fontWeight: FontWeight.bold,
-                                                color: const Color(0xFF7A45D1),
-                                                fontFamily: 'AntonSC',
+                                            // Información del evento (lado izquierdo)
+                                            Expanded(
+                                              flex: 2,
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    evento['nombre']?.toUpperCase() ?? '',
+                                                    style: TextStyle(
+                                                      fontSize: maxWidth < 350 ? 16 : 20,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: const Color(0xFF7A45D1),
+                                                      fontFamily: 'AntonSC',
+                                                    ),
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  Text(
+                                                    'FECHA: ${evento['fecha']?.toUpperCase() ?? ''}',
+                                                    style: TextStyle(
+                                                      fontSize: maxWidth < 350 ? 12 : 15,
+                                                      color: Colors.grey[700],
+                                                      fontWeight: FontWeight.w900,
+                                                      fontFamily: 'AntonSC',
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    'HORA: ${evento['hora']?.toUpperCase() ?? ''}',
+                                                    style: TextStyle(
+                                                      fontSize: maxWidth < 350 ? 12 : 15,
+                                                      color: Colors.grey[700],
+                                                      fontWeight: FontWeight.w900,
+                                                      fontFamily: 'AntonSC',
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    'LUGAR: ${evento['lugar']?.toUpperCase() ?? ''}',
+                                                    style: TextStyle(
+                                                      fontSize: maxWidth < 350 ? 12 : 15,
+                                                      color: Colors.grey[700],
+                                                      fontWeight: FontWeight.w900,
+                                                      fontFamily: 'AntonSC',
+                                                    ),
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ],
                                               ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                              'FECHA: ${evento['fecha']?.toUpperCase() ?? ''}',
-                                              style: TextStyle(
-                                                fontSize: maxWidth < 350 ? 12 : 15,
-                                                color: Colors.grey[700],
-                                                fontWeight: FontWeight.w900,
-                                                fontFamily: 'AntonSC',
+                                            const SizedBox(width: 10),
+                                            // Imagen del evento (lado derecho)
+                                            Container(
+                                              width: maxWidth < 350 ? 50 : 70,
+                                              height: maxWidth < 350 ? 50 : 70,
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(12),
+                                                color: Colors.grey[200],
+                                                image: evento['imagen'] != null
+                                                    ? DecorationImage(
+                                                        image: NetworkImage('http://192.168.1.24:3002${evento['imagen']}'),
+                                                        fit: BoxFit.cover,
+                                                      )
+                                                    : null,
                                               ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              'HORA: ${evento['hora']?.toUpperCase() ?? ''}',
-                                              style: TextStyle(
-                                                fontSize: maxWidth < 350 ? 12 : 15,
-                                                color: Colors.grey[700],
-                                                fontWeight: FontWeight.w900,
-                                                fontFamily: 'AntonSC',
-                                              ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              'LUGAR: ${evento['lugar']?.toUpperCase() ?? ''}',
-                                              style: TextStyle(
-                                                fontSize: maxWidth < 350 ? 12 : 15,
-                                                color: Colors.grey[700],
-                                                fontWeight: FontWeight.w900,
-                                                fontFamily: 'AntonSC',
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
+                                              child: evento['imagen'] == null
+                                                  ? Icon(
+                                                      Icons.event,
+                                                      color: Colors.grey[600],
+                                                      size: maxWidth < 350 ? 24 : 32,
+                                                    )
+                                                  : null,
                                             ),
                                           ],
                                         ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      // Imagen del evento (lado derecho)
-                                      Container(
-                                        width: maxWidth < 350 ? 50 : 70,
-                                        height: maxWidth < 350 ? 50 : 70,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(12),
-                                          color: Colors.grey[200],
-                                          image: evento['imagen'] != null
-                                              ? DecorationImage(
-                                                  image: NetworkImage(evento['imagen']),
-                                                  fit: BoxFit.cover,
-                                                )
-                                              : null,
-                                        ),
-                                      ),
-                                    ],
+                                        // Indicador de asistencia
+                                        if (evento['asistira'] != null && evento['asistira'] == true)
+                                          Positioned(
+                                            top: 0,
+                                            right: 0,
+                                            child: Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: const BoxDecoration(
+                                                color: Colors.green,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Icon(
+                                                Icons.check,
+                                                color: Colors.white,
+                                                size: 16,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -248,7 +620,7 @@ class _EventosScreenState extends State<EventosScreen> {
         child: const Icon(Icons.add, size: 32),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      // Barra de navegación inferior igual a home_screen
+      // Barra de navegación inferior
       bottomNavigationBar: LayoutBuilder(
         builder: (context, constraints) {
           final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
@@ -319,7 +691,7 @@ class _EventosScreenState extends State<EventosScreen> {
                   } else if (index == 1) {
                     Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
                   } else if (index == 2) {
-                    Navigator.pushNamedAndRemoveUntil(context, '/eventos', (route) => false);
+                    // Ya estamos en eventos
                   } else if (index == 3) {
                     Navigator.pushNamedAndRemoveUntil(context, '/perfil', (route) => false);
                   }

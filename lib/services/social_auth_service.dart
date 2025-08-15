@@ -171,7 +171,7 @@ class SocialAuthService {
   ) async {
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3002/api/social-login'),
+        Uri.parse('http://192.168.1.24:3002/api/social-login'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'email': email,

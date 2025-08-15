@@ -21,6 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   String? _selectedGenero;
   bool _isLoadingLocation = false;
+  bool _isRegistering = false; // Nuevo estado para el registro
 
   @override
   void initState() {
@@ -35,6 +36,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _registerUser() async {
+    if (_isRegistering) return; // Prevenir múltiples llamadas
+    
+    setState(() {
+      _isRegistering = true;
+    });
+    
+    print('🚀 Iniciando proceso de registro...');
+    
     final String nombres = _nombresController.text;
     final String apellidos = _apellidosController.text;
     final String correo = _correoController.text;
@@ -43,6 +52,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final String ubicacion = _ubicacionController.text;
     final String fechaNacimiento = _fechaNacimientoController.text;
 
+    print('📝 Datos del formulario:');
+    print('  - Nombres: $nombres');
+    print('  - Apellidos: $apellidos');
+    print('  - Correo: $correo');
+    print('  - Contraseña: ${contrasena.isNotEmpty ? "[ESTABLECIDA]" : "[VACÍA]"}');
+    print('  - Género: $genero');
+    print('  - Ubicación: $ubicacion');
+    print('  - Fecha nacimiento: $fechaNacimiento');
+
     if (nombres.isEmpty ||
         apellidos.isEmpty ||
         correo.isEmpty ||
@@ -50,15 +68,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
         genero.isEmpty ||
         ubicacion.isEmpty ||
         fechaNacimiento.isEmpty) {
+      print('❌ Validación fallida: campos faltantes');
+      setState(() {
+        _isRegistering = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, completa todos los campos')),
+        const SnackBar(
+          content: Text('Por favor, completa todos los campos'),
+          duration: Duration(seconds: 1),
+        ),
       );
       return;
     }
 
     try {
+      print('📍 Obteniendo ubicación...');
       // Obtener coordenadas si es posible
       final position = await LocationService.getCurrentLocation();
+      print('📍 Ubicación obtenida: ${position?.latitude}, ${position?.longitude}');
       
       final userData = jsonEncode({
         'nombres': nombres,
@@ -74,18 +101,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
         },
       });
 
+      print('🌐 Enviando petición a: ${ApiConfig.registrarEndpoint}');
+      print('📦 Datos a enviar: $userData');
+
       final response = await http.post(
         Uri.parse(ApiConfig.registrarEndpoint),
         headers: {'Content-Type': 'application/json'},
         body: userData,
       );
 
+      print('📡 Respuesta del servidor:');
+      print('  - Status Code: ${response.statusCode}');
+      print('  - Body: ${response.body}');
+
       if (response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
+        print('✅ Registro exitoso');
+        
+        // Mostrar mensaje temporal
+        String mensaje = responseData['mensaje'];
+        mensaje += '\n💡 Usa tu CORREO ELECTRÓNICO y contraseña para iniciar sesión';
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(responseData['mensaje']),
+            content: Text(mensaje),
             backgroundColor: Colors.green,
+            duration: const Duration(seconds: 1), // Tiempo para leer
           ),
         );
         // Limpiar formulario
@@ -99,21 +140,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _selectedGenero = null;
         });
       } else {
+        print('❌ Error en el registro');
         final responseData = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(responseData['mensaje'] ?? 'Error al registrar el usuario'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 1),
           ),
         );
       }
     } catch (e) {
+      print('💥 Error de conexión: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error de conexión: $e'),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 1),
         ),
       );
+    } finally {
+      setState(() {
+        _isRegistering = false;
+      });
     }
   }
 
@@ -165,6 +214,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const SnackBar(
             content: Text('Ubicación obtenida correctamente'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
           ),
         );
       } else {
@@ -172,6 +222,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const SnackBar(
             content: Text('No se pudo obtener la ubicación. Verifica los permisos.'),
             backgroundColor: Colors.orange,
+            duration: Duration(seconds: 1),
           ),
         );
       }
@@ -180,6 +231,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         SnackBar(
           content: Text('Error: $e'),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 1),
         ),
       );
     } finally {
@@ -283,22 +335,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           width: double.infinity,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF8B5CF6),
+                              backgroundColor: _isRegistering 
+                                ? Colors.grey 
+                                : const Color(0xFF8B5CF6),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 15),
                               elevation: 0,
                             ),
-                            onPressed: _registerUser,
-                            child: const Text(
-                              'Registrarme',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            onPressed: _isRegistering ? null : _registerUser,
+                            child: _isRegistering
+                              ? const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      'Registrando...',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : const Text(
+                                  'Registrarme',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                           ),
                         ),
                       ],
