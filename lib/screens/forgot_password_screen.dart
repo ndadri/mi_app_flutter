@@ -17,7 +17,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _sendResetCode() async {
     if (_emailController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor ingresa tu correo')),
+        const SnackBar(
+          content: Text('Por favor ingresa tu correo'),
+          duration: Duration(seconds: 1),
+        ),
       );
       return;
     }
@@ -28,7 +31,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:3002/api/forgot-password'),
+        Uri.parse('http://192.168.1.24:3002/api/forgot-password'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'email': _emailController.text.trim()}),
       );
@@ -37,7 +40,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       if (response.statusCode == 200 && data['success']) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ ${data['message']}')),
+          SnackBar(
+            content: Text('✅ ${data['message']}'),
+            duration: const Duration(seconds: 1),
+          ),
         );
         Navigator.push(
           context,
@@ -49,12 +55,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ ${data['message']}')),
+          SnackBar(
+            content: Text('❌ ${data['message']}'),
+            duration: const Duration(seconds: 1),
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(
+          content: Text('Error: $e'),
+          duration: const Duration(seconds: 1),
+        ),
       );
     } finally {
       setState(() {

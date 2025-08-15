@@ -9,19 +9,31 @@ void promedioMascotasUsuarioAction(BuildContext context) {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final double maxWidth = MediaQuery.of(context).size.width * 0.92;
-          final double dialogWidth = maxWidth < 360 ? maxWidth : 360;
-          final double horizontalPad = dialogWidth < 340 ? 12 : 28;
-          return SingleChildScrollView(
-            child: Container(
-              width: dialogWidth,
-              padding: EdgeInsets.symmetric(vertical: 32, horizontal: horizontalPad),
+          final screenWidth = MediaQuery.of(context).size.width;
+          final screenHeight = MediaQuery.of(context).size.height;
+          final isSmallScreen = screenWidth < 400;
+          final isMediumScreen = screenWidth >= 400 && screenWidth < 600;
+          
+          return Container(
+            width: isSmallScreen ? screenWidth * 0.85 : (isMediumScreen ? 340 : 380),
+            constraints: BoxConstraints(
+              maxWidth: screenWidth * 0.9,
+              maxHeight: screenHeight * 0.8,
+            ),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                vertical: isSmallScreen ? 20 : 28,
+                horizontal: isSmallScreen ? 16 : 24,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    padding: EdgeInsets.symmetric(
+                      vertical: isSmallScreen ? 10 : 12,
+                      horizontal: isSmallScreen ? 12 : 20,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF7A45D1),
                       borderRadius: BorderRadius.circular(16),
@@ -33,82 +45,57 @@ void promedioMascotasUsuarioAction(BuildContext context) {
                         ),
                       ],
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.show_chart, color: Colors.white, size: 32),
-                        SizedBox(width: 16),
+                        Icon(
+                          Icons.show_chart, 
+                          color: Colors.white, 
+                          size: isSmallScreen ? 28 : 32,
+                        ),
+                        SizedBox(width: isSmallScreen ? 8 : 12),
                         Flexible(
                           child: Text(
                             'PROMEDIO MASCOTAS/USUARIO',
                             style: TextStyle(
                               fontFamily: 'AntonSC',
                               fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              fontSize: isSmallScreen ? 14 : 18,
                               color: Colors.white,
-                              letterSpacing: 1.1,
+                              letterSpacing: 1.0,
                             ),
-                            softWrap: true,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 2,
                             textAlign: TextAlign.center,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  // Promedio grande
-                  const Text(
-                    '2.7', // Valor ejemplo
+                  SizedBox(height: isSmallScreen ? 20 : 28),
+                  Text(
+                    '2.3',
                     style: TextStyle(
                       fontFamily: 'AntonSC',
                       fontWeight: FontWeight.bold,
-                      fontSize: 54,
+                      fontSize: isSmallScreen ? 44 : 54,
                       color: Color(0xFF7A45D1),
                       letterSpacing: 2.0,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Mascotas por usuario',
+                  SizedBox(height: isSmallScreen ? 8 : 12),
+                  Text(
+                    'Mascotas por usuario en promedio',
                     style: TextStyle(
                       color: Colors.white70,
-                      fontSize: 18,
+                      fontSize: isSmallScreen ? 16 : 18,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0.8,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 32),
-                  // Placeholder para gráfico
-                  Container(
-                    width: double.infinity,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF292B45),
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.10),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Gráfico próximamente',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
+                  SizedBox(height: isSmallScreen ? 20 : 28),
                   SizedBox(
                     width: double.infinity,
+                    height: isSmallScreen ? 45 : 50,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF7A45D1),
@@ -117,12 +104,12 @@ void promedioMascotasUsuarioAction(BuildContext context) {
                         elevation: 0,
                       ),
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text(
+                      child: Text(
                         'CERRAR',
                         style: TextStyle(
                           fontFamily: 'AntonSC',
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: isSmallScreen ? 14 : 16,
                         ),
                       ),
                     ),
@@ -136,5 +123,3 @@ void promedioMascotasUsuarioAction(BuildContext context) {
     ),
   );
 }
-
-

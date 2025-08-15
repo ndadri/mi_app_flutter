@@ -9,120 +9,130 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       // Configuración del fondo de la pantalla
-      backgroundColor: const Color(0xFFEDEDED), // Color gris claro para el fondo
+      backgroundColor:
+          const Color(0xFFEDEDED), // Color gris claro para el fondo
 
-      // Contenedor principal con SafeArea para evitar que el contenido se solape con la barra superior
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
-            final height = constraints.maxHeight;
+      // Contenedor principal SIN SafeArea para que el header ocupe toda la pantalla
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
 
-            // Ajustes responsivos
-            final isTablet = width >= 600 && width < 1024;
-            final isDesktop = width >= 1024;
-            final isSmall = width < 400;
+          // Ajustes responsivos
+          final isTablet = width >= 600 && width < 1024;
+          final isDesktop = width >= 1024;
+          final isSmall = width < 400;
 
-            final headerHeight = isDesktop
-                ? height * 0.13
-                : isTablet
-                    ? height * 0.12
-                    : height * 0.10;
-            final cardHeight = isDesktop
-                ? height * 0.70
-                : isTablet
-                    ? height * 0.65
-                    : height * 0.50;
-            final cardPadding = isDesktop
-                ? width * 0.25
-                : isTablet
-                    ? width * 0.15
-                    : width * 0.05;
-            final cardBorderRadius = isDesktop
-                ? 36.0
-                : isTablet
-                    ? 28.0
-                    : 18.0;
-            final cardTextFont = isDesktop
-                ? 32.0
-                : isTablet
-                    ? 24.0
-                    : 18.0;
-            final cardSubTextFont = isDesktop
-                ? 26.0
-                : isTablet
-                    ? 18.0
-                    : 14.0;
-            final buttonSize = isDesktop
-                ? 100.0
-                : isTablet
-                    ? 80.0
-                    : 56.0;
-            final iconSize = isDesktop
-                ? 48.0
-                : isTablet
-                    ? 36.0
-                    : 26.0;
-            final headerFontSize = isDesktop
-                ? 48.0
-                : isTablet
-                    ? 36.0
-                    : 24.0;
-            final headerPadding = isDesktop
-                ? 40.0
-                : isTablet
-                    ? 28.0
-                    : 16.0;
-            final spaceBetween = isDesktop
-                ? 140.0
-                : isTablet
-                    ? 100.0
-                    : 60.0;
+          final cardHeight = isDesktop
+              ? height * 0.70
+              : isTablet
+                  ? height * 0.65
+                  : height * 0.50;
+          final cardPadding = isDesktop
+              ? width * 0.25
+              : isTablet
+                  ? width * 0.15
+                  : width * 0.05;
+          final cardBorderRadius = isDesktop
+              ? 36.0
+              : isTablet
+                  ? 28.0
+                  : 18.0;
+          final cardTextFont = isDesktop
+              ? 32.0
+              : isTablet
+                  ? 24.0
+                  : 18.0;
+          final buttonSize = isDesktop
+              ? 100.0
+              : isTablet
+                  ? 80.0
+                  : 56.0;
+          final iconSize = isDesktop
+              ? 48.0
+              : isTablet
+                  ? 36.0
+                  : 26.0;
+          final headerPadding = isDesktop
+              ? 40.0
+              : isTablet
+                  ? 28.0
+                  : 16.0;
 
-            return SizedBox.expand(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Encabezado arriba
-                  Container(
-                    height: 120,
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF7A45D1), // Morado sólido
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(28), // <-- Borde inferior izquierdo suave
-                        bottomRight: Radius.circular(28), // <-- Borde inferior derecho suave
-                      ),
+          return Scaffold(
+            body: Column(
+              children: [
+                // HEADER QUE OCUPA TODA LA PARTE SUPERIOR INCLUIDA LA BARRA DE ESTADO
+                Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF7A45D1),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(35),
+                      bottomRight: Radius.circular(35),
                     ),
-                    alignment: Alignment.bottomCenter, // Alinea el texto en la parte inferior
-                    padding: EdgeInsets.only(bottom: headerPadding), // Espaciado en la parte inferior
-                    child: const Text(
-                      'PET MATCH', // Texto principal en el encabezado
-                      style: TextStyle(
-                        fontFamily: 'AntonSC', // <-- Aquí
-                        fontSize: 44, // Tamaño de la fuente
-                        fontWeight: FontWeight.bold, // Estilo de la fuente
-                        color: Colors.white, // Color de la fuente blanco
-                        letterSpacing: 1.5, // Espaciado entre letras
+                  ),
+                  child: SafeArea(
+                    child: Container(
+                      alignment: Alignment.bottomCenter,
+                      padding: EdgeInsets.only(
+                        bottom: isSmall
+                            ? 20
+                            : (isTablet ? 24 : 28), // Padding responsivo
+                      ),
+                      child: Text(
+                        'PET MATCH',
+                        style: TextStyle(
+                          fontFamily: 'AntonSC',
+                          fontSize: isSmall
+                              ? 34
+                              : (isTablet ? 38 : 42), // Tamaño responsivo
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1.5,
+                        ),
                       ),
                     ),
                   ),
-                  // Aquí centramos solo la tarjeta y los botones
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // CARD DE LA MASCOTA (más pequeña)
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: cardPadding + 40), // <-- Más padding para carta más pequeña
-                          child: Container(
+                ),
+                // CONTENIDO PRINCIPAL - TARJETAS CENTRADAS
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: cardPadding),
+                      child: Column(
+                        mainAxisAlignment:
+                            MainAxisAlignment.center, // Centra verticalmente
+                        crossAxisAlignment:
+                            CrossAxisAlignment.center, // Centra horizontalmente
+                        children: [
+                          // Espaciado superior para centrar mejor
+                          SizedBox(height: headerPadding),
+
+                          // TARJETA DE MASCOTA - IMAGEN
+                          Container(
                             width: double.infinity,
-                            height: cardHeight * 0.6, // <-- Reducir altura al 60% (antes era 80%)
+                            constraints: BoxConstraints(
+                              maxWidth: isSmall
+                                  ? 320
+                                  : (isTablet
+                                      ? 400
+                                      : 450), // Ancho máximo responsivo
+                            ),
+                            height: cardHeight * 0.65, // Altura responsiva
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(cardBorderRadius),
-                              boxShadow: const [
-                                BoxShadow(color: Colors.black26, blurRadius: 8),
+                              borderRadius: BorderRadius.circular(
+                                  cardBorderRadius +
+                                      5), // Bordes más redondeados
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.15),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
                               ],
                               image: const DecorationImage(
                                 image: NetworkImage(
@@ -132,22 +142,31 @@ class HomeScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                        ),
-                        // Espaciado entre carta e información
-                        SizedBox(height: isSmall ? 6 : 12), // <-- Menos espaciado
-                        // INFORMACIÓN DE LA MASCOTA (más pequeña también)
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: cardPadding + 40), // <-- Mismo padding que la carta
-                          child: Container(
+
+                          // Espaciado entre imagen e información
+                          SizedBox(height: isSmall ? 16 : 20),
+
+                          // INFORMACIÓN DE LA MASCOTA - CENTRADA
+                          Container(
                             width: double.infinity,
-                            padding: EdgeInsets.all(isSmall ? 12 : 16), // <-- Menos padding interno
+                            constraints: BoxConstraints(
+                              maxWidth: isSmall
+                                  ? 320
+                                  : (isTablet
+                                      ? 400
+                                      : 450), // Mismo ancho que la imagen
+                            ),
+                            padding: EdgeInsets.all(
+                                isSmall ? 18 : 24), // Más padding
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(isSmall ? 12 : 16),
+                              borderRadius: BorderRadius.circular(
+                                  cardBorderRadius +
+                                      5), // Bordes más redondeados
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 8,
+                                  blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
                               ],
@@ -167,7 +186,7 @@ class HomeScreen extends StatelessWidget {
                                   textAlign: TextAlign.center,
                                 ),
                                 SizedBox(height: isSmall ? 4 : 8),
-                                
+
                                 // Ubicación
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -188,7 +207,7 @@ class HomeScreen extends StatelessWidget {
                                   ],
                                 ),
                                 SizedBox(height: isSmall ? 6 : 10),
-                                
+
                                 // Descripción
                                 Text(
                                   'Soy buena onda',
@@ -200,26 +219,33 @@ class HomeScreen extends StatelessWidget {
                                   textAlign: TextAlign.center,
                                 ),
                                 SizedBox(height: isSmall ? 8 : 12),
-                                
+
                                 // Información en filas
                                 Column(
                                   children: [
                                     // Tipo y Raza
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
                                       children: [
                                         _infoItem(Icons.pets, 'Perro', isSmall),
-                                        _infoItem(Icons.pets, 'Golden Retriever', isSmall), // <-- Cambiado de Icons.category a Icons.pets
+                                        _infoItem(
+                                            Icons.pets,
+                                            'Golden Retriever',
+                                            isSmall), // <-- Cambiado de Icons.category a Icons.pets
                                       ],
                                     ),
                                     SizedBox(height: isSmall ? 6 : 8),
-                                    
+
                                     // Sexo y Estado
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
                                       children: [
-                                        _infoItem(Icons.pets, 'Hembra', isSmall), // <-- Cambiado de Icons.wc a Icons.pets
-                                        _infoItem(Icons.check_circle, 'Disponible', isSmall),
+                                        _infoItem(Icons.pets, 'Hembra',
+                                            isSmall), // <-- Cambiado de Icons.wc a Icons.pets
+                                        _infoItem(Icons.check_circle,
+                                            'Disponible', isSmall),
                                       ],
                                     ),
                                   ],
@@ -228,44 +254,54 @@ class HomeScreen extends StatelessWidget {
                               ],
                             ),
                           ),
-                        ),
-                        
-                        // Espaciado antes de los botones
-                        SizedBox(height: isSmall ? 12 : 20), // <-- Menos espaciado
-                        
-                        // BOTONES DE LIKE Y DISLIKE
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _circleButton(Icons.close, Colors.redAccent, buttonSize, iconSize),
-                            SizedBox(width: isDesktop ? 60 : isTablet ? 48 : 40), // <-- Espacio entre botones optimizado
-                            _circleButton(Icons.favorite, Colors.green, buttonSize, iconSize),
-                          ],
-                        ),
-                        
-                        // Espaciado final
-                        SizedBox(height: isSmall ? 16 : 24), // <-- Espacio final
-                      ],
+
+                          // Espaciado antes de los botones
+                          SizedBox(height: isSmall ? 20 : 28),
+
+                          // BOTONES DE LIKE Y DISLIKE - CENTRADOS
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _circleButton(Icons.close, Colors.redAccent,
+                                  buttonSize, iconSize),
+                              SizedBox(
+                                  width: isDesktop
+                                      ? 70
+                                      : isTablet
+                                          ? 55
+                                          : 45), // Espacio entre botones
+                              _circleButton(Icons.favorite, Colors.green,
+                                  buttonSize, iconSize),
+                            ],
+                          ),
+
+                          // Espaciado final
+                          SizedBox(height: headerPadding),
+                        ],
+                      ),
                     ),
                   ),
-                ],
-              ),
-            );
-          },
-        ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
 
       // NAV INFERIOR - Barra de navegación en la parte inferior
       bottomNavigationBar: LayoutBuilder(
         builder: (context, constraints) {
-          final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
+          final isTablet =
+              constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
           final isDesktop = constraints.maxWidth >= 1024;
           return Container(
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20), // <-- Borde curvo superior izquierdo
-                topRight: Radius.circular(20), // <-- Borde curvo superior derecho
+                topLeft:
+                    Radius.circular(20), // <-- Borde curvo superior izquierdo
+                topRight:
+                    Radius.circular(20), // <-- Borde curvo superior derecho
               ),
               boxShadow: [
                 BoxShadow(
@@ -282,7 +318,8 @@ class HomeScreen extends StatelessWidget {
               ),
               child: BottomNavigationBar(
                 type: BottomNavigationBarType.fixed,
-                backgroundColor: Colors.transparent, // <-- Transparente para que se vea el container
+                backgroundColor: Colors
+                    .transparent, // <-- Transparente para que se vea el container
                 elevation: 0, // <-- Sin elevación para evitar sombras dobles
                 selectedItemColor: const Color(0xFF7A45D1),
                 unselectedItemColor: Colors.grey,
@@ -340,14 +377,18 @@ class HomeScreen extends StatelessWidget {
   }
 
   // Widget para los botones circulares (like y dislike)
-  Widget _circleButton(IconData icon, Color color, double size, double iconSize) {
+  Widget _circleButton(
+      IconData icon, Color color, double size, double iconSize) {
     return Container(
       width: size, // Ancho del botón
       height: size, // Alto del botón
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(size * 0.3), // <-- Bordes curvos suaves
+        borderRadius:
+            BorderRadius.circular(size * 0.3), // <-- Bordes curvos suaves
         color: Colors.white, // Color de fondo del botón
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)], // Sombra del botón
+        boxShadow: const [
+          BoxShadow(color: Colors.black26, blurRadius: 4)
+        ], // Sombra del botón
       ),
       child: IconButton(
         icon: Icon(icon, size: iconSize), // Ícono dentro del botón
@@ -384,79 +425,6 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  // Widget para chips de intereses (más pequeños)
-  Widget _interestChip(String text, bool isSmall) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isSmall ? 6 : 10, // <-- Menos padding horizontal
-        vertical: isSmall ? 3 : 5, // <-- Menos padding vertical
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xFF7A45D1).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16), // <-- Bordes más pequeños
-        border: Border.all(
-          color: const Color(0xFF7A45D1).withOpacity(0.3),
-        ),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: isSmall ? 9 : 11, // <-- Texto más pequeño
-          color: const Color(0xFF7A45D1),
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-
-  // Widget para filas de información detallada
-  Widget _detailRow(String label, String value, bool isSmall, {bool isLast = false}) {
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: isSmall ? 4 : 6),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Label (izquierda)
-              Expanded(
-                flex: 2,
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: isSmall ? 10 : 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-              // Value (derecha)
-              Expanded(
-                flex: 2,
-                child: Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: isSmall ? 10 : 12,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.right,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Línea divisoria (excepto en el último elemento)
-        if (!isLast)
-          Divider(
-            height: 1,
-            thickness: 0.5,
-            color: Colors.grey[300],
-          ),
-      ],
     );
   }
 }

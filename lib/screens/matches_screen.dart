@@ -1,6 +1,9 @@
 // Importación del paquete Flutter para la interfaz de usuario
 import 'package:flutter/material.dart';
 import 'menssages_screen.dart';
+import 'home_screen.dart';
+import 'eventos_screen.dart';
+import 'perfil_usuario_screen.dart';
 
 // Clase principal para la pantalla de Matches
 class MatchesScreen extends StatelessWidget {
@@ -8,6 +11,11 @@ class MatchesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Variables responsive para diferentes tamaños de pantalla
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmall = screenWidth < 600;
+    final isTablet = screenWidth >= 600 && screenWidth < 1024;
+    
     final List<Map<String, String>> matches = [
       {
         'nombre': 'Luna',
@@ -30,7 +38,7 @@ class MatchesScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFEDEDED), // Fondo gris claro de la pantalla
       body: Column(
         children: [
-          // Header morado personalizado
+          // HEADER QUE OCUPA TODA LA PARTE SUPERIOR INCLUIDA LA BARRA DE ESTADO
           Container(
             height: 120,
             width: double.infinity,
@@ -41,16 +49,26 @@ class MatchesScreen extends StatelessWidget {
                 bottomRight: Radius.circular(35),
               ),
             ),
-            alignment: Alignment.bottomCenter,
-            padding: const EdgeInsets.only(bottom: 24),
-            child: const Text(
-              'Matches',
-              style: TextStyle(
-                fontSize: 38,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 1.5,
-                fontFamily: 'AntonSC', // Usa tu fuente si la tienes
+            child: SafeArea(
+              child: Container(
+                alignment: Alignment.bottomCenter,
+                padding: EdgeInsets.only(
+                  bottom: isSmall
+                      ? 20
+                      : (isTablet ? 24 : 28), // Padding responsivo
+                ),
+                child: Text(
+                  'MATCHES',
+                  style: TextStyle(
+                    fontFamily: 'AntonSC',
+                    fontSize: isSmall
+                        ? 34
+                        : (isTablet ? 38 : 42), // Tamaño responsivo
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1.5,
+                  ),
+                ),
               ),
             ),
           ),
@@ -79,6 +97,100 @@ class MatchesScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+      // NAV INFERIOR - Barra de navegación en la parte inferior
+      bottomNavigationBar: LayoutBuilder(
+        builder: (context, constraints) {
+          final isTablet =
+              constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
+          final isDesktop = constraints.maxWidth >= 1024;
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft:
+                    Radius.circular(20), // <-- Borde curvo superior izquierdo
+                topRight:
+                    Radius.circular(20), // <-- Borde curvo superior derecho
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 8,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: Colors
+                    .transparent, // <-- Transparente para que se vea el container
+                elevation: 0, // <-- Sin elevación para evitar sombras dobles
+                selectedItemColor: const Color(0xFF7A45D1),
+                unselectedItemColor: Colors.grey,
+                iconSize: isDesktop
+                    ? 40
+                    : isTablet
+                        ? 32
+                        : 22,
+                selectedFontSize: isDesktop
+                    ? 22
+                    : isTablet
+                        ? 16
+                        : 12,
+                unselectedFontSize: isDesktop
+                    ? 20
+                    : isTablet
+                        ? 14
+                        : 10,
+                currentIndex: 0, // MATCH está seleccionado (índice 0)
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.favorite),
+                    label: 'Match',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.pets),
+                    label: 'Inicio',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.event),
+                    label: 'Eventos',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.person),
+                    label: 'Perfil',
+                  ),
+                ],
+                onTap: (index) {
+                  if (index == 0) {
+                    // Ya estamos en Match, no navegar
+                  } else if (index == 1) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const HomeScreen()),
+                    );
+                  } else if (index == 2) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const EventosScreen()),
+                    );
+                  } else if (index == 3) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const PerfilUsuarioScreen()),
+                    );
+                  }
+                },
+              ),
+            ),
+          );
+        },
       ),
     );
   }

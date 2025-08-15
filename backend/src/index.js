@@ -10,6 +10,14 @@ try {
   const { Pool } = require('pg');
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    // Optimizaciones para login más rápido
+    max: 20, // Máximo 20 conexiones concurrentes
+    idleTimeoutMillis: 30000, // Tiempo de vida de conexiones inactivas
+    connectionTimeoutMillis: 5000, // Timeout de conexión 5 segundos
+    statement_timeout: 10000, // Timeout de queries 10 segundos
+    query_timeout: 10000, // Timeout adicional para queries
+    keepAlive: true, // Mantener conexiones vivas
+    keepAliveInitialDelayMillis: 10000
   });
 } catch (error) {
   console.warn('⚠️ PostgreSQL no disponible:', error.message);
@@ -50,17 +58,24 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Middleware de logging
+// Middleware de logging detallado
 app.use((req, res, next) => {
   console.log(`📝 ${new Date().toISOString()} - ${req.method} ${req.path}`);
+  if (req.method === 'POST' && req.path.includes('/eventos')) {
+    console.log('🎯 PETICIÓN DE CREAR EVENTO DETECTADA');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+  }
   next();
 });
 
 // Importar y usar las rutas de autenticación
 const authRoutes = require('../routes/authRoutes');
+const eventoRoutes = require('../routes/eventoRoutes');
 //const locationRoutes = require('../routes/locationRoutes');
 //const passwordResetRoutes = require('../routes/passwordResetRoutes');
 app.use('/api', authRoutes);
+app.use('/api', eventoRoutes);
 //app.use('/api', locationRoutes);
 //app.use('/api', passwordResetRoutes);
 
@@ -75,6 +90,7 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     endpoints: [
       '/api/auth',
+      '/api/eventos',
       '/api/mascotas',
       '/api/chat',
       '/api/reports'
@@ -140,7 +156,7 @@ app.use((err, req, res, next) => {
 
 // Iniciar servidor con verificación de base de datos
 // Fixed frontend dependency issue - backend only serves API endpoints
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 
 // Validar variables de entorno críticas
 const requiredEnvVars = ['JWT_SECRET'];

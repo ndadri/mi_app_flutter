@@ -79,6 +79,10 @@ router.post('/registrar', async (req, res) => {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(contraseña, saltRounds);
 
+        // Generar username automáticamente basado en nombres (temporalmente comentado)
+        let username = nombres.toLowerCase().replace(/\s+/g, '');
+        console.log(`📝 Username que se generaría: ${username}`);
+
         // Preparar coordenadas (opcional)
         let latitud = null;
         let longitud = null;
@@ -87,7 +91,7 @@ router.post('/registrar', async (req, res) => {
             longitud = parseFloat(coordenadas.longitud);
         }
 
-        // Insertar el usuario en la base de datos
+        // Insertar el usuario en la base de datos (sin username temporalmente)
         const query = `
             INSERT INTO usuarios (nombres, apellidos, correo, contraseña, genero, ubicacion, fecha_nacimiento, latitud, longitud)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -123,11 +127,8 @@ router.post('/registrar', async (req, res) => {
 });
 
 // Ruta POST para iniciar sesión
-
 router.post('/login', async (req, res) => {
     try {
-        console.log('🔐 Intento de login:', JSON.stringify(req.body, null, 2));
-        
         let { username, password } = req.body;
 
         // Validaciones básicas
@@ -141,11 +142,12 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Buscar usuario solo por correo
+        // Buscar usuario por correo con consulta optimizada
         const userQuery = `
-            SELECT id, correo, contraseña
+            SELECT id, correo, contraseña, nombres, apellidos
             FROM usuarios 
             WHERE correo = $1
+            LIMIT 1
         `;
         const userResult = await pool.query(userQuery, [username]);
 
@@ -158,7 +160,7 @@ router.post('/login', async (req, res) => {
 
         const user = userResult.rows[0];
 
-        // Verificar contraseña
+        // Verificar contraseña de forma optimizada
         const isValidPassword = await bcrypt.compare(password, user.contraseña);
 
         if (!isValidPassword) {
@@ -168,31 +170,31 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Generar JWT
+        // Generar JWT de forma más rápida
         const token = jwt.sign(
             { userId: user.id, correo: user.correo },
-            process.env.JWT_SECRET,
+            process.env.JWT_SECRET || 'fallback_secret',
             { expiresIn: '7d' }
         );
 
-        // Login exitoso
-        console.log('✅ Login exitoso para usuario:', user.correo);
-        
-        // Eliminar la contraseña de la respuesta
-        const { contraseña, ...userWithoutPassword } = user;
-        
+        // Login exitoso - respuesta simplificada y rápida
         res.status(200).json({
             success: true,
-            message: `¡Bienvenido ${user.correo}!`,
-            user: userWithoutPassword,
-            token // <-- Aquí se retorna el JWT
+            message: 'Login exitoso',
+            user: {
+                id: user.id,
+                correo: user.correo,
+                nombres: user.nombres,
+                apellidos: user.apellidos
+            },
+            token
         });
 
     } catch (error) {
-        console.error('❌ Error en login:', error);
+        console.error('❌ Error en login:', error.message);
         res.status(500).json({ 
             success: false,
-            message: 'Error interno del servidor: ' + error.message 
+            message: 'Error interno del servidor' 
         });
     }
 });
@@ -200,15 +202,12 @@ router.post('/login', async (req, res) => {
 // Ruta POST para login social (Google/Facebook)
 router.post('/social-login', async (req, res) => {
     try {
-        console.log('📱 Login social recibido:', JSON.stringify(req.body, null, 2));
-        
         let { email, name, provider, photoURL } = req.body;
 
         // Validaciones básicas
         email = typeof email === 'string' ? email.trim().toLowerCase() : '';
         name = typeof name === 'string' ? name.trim() : '';
         provider = typeof provider === 'string' ? provider.trim() : '';
-        photoURL = typeof photoURL === 'string' ? photoURL.trim() : '';
 
         if (!email || !name || !provider) {
             return res.status(400).json({ 
@@ -217,36 +216,26 @@ router.post('/social-login', async (req, res) => {
             });
         }
 
-        // Buscar si el usuario ya existe
+        // Buscar si el usuario ya existe (consulta optimizada)
         const userQuery = `
-            SELECT id, nombres, apellidos, correo, genero, ubicacion, fecha_nacimiento, provider, photo_url
+            SELECT id, nombres, apellidos, correo, genero, ubicacion, fecha_nacimiento
             FROM usuarios 
             WHERE correo = $1
+            LIMIT 1
         `;
         const userResult = await pool.query(userQuery, [email]);
 
         let user;
         
         if (userResult.rows.length > 0) {
-            // Usuario existe, actualizar información del proveedor
+            // Usuario existe
             user = userResult.rows[0];
-            
-            const updateQuery = `
-                UPDATE usuarios 
-                SET provider = $1, photo_url = $2, updated_at = CURRENT_TIMESTAMP
-                WHERE correo = $3
-                RETURNING id, nombres, apellidos, correo, genero, ubicacion, fecha_nacimiento, provider, photo_url
-            `;
-            const updateResult = await pool.query(updateQuery, [provider, photoURL, email]);
-            user = updateResult.rows[0];
-            
-            console.log('✅ Usuario existente actualizado:', user.correo);
         } else {
-            // Usuario nuevo, crear registro
+            // Usuario nuevo, crear registro optimizado
             const insertQuery = `
-                INSERT INTO usuarios (nombres, apellidos, correo, contraseña, genero, ubicacion, fecha_nacimiento, provider, photo_url)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-                RETURNING id, nombres, apellidos, correo, genero, ubicacion, fecha_nacimiento, provider, photo_url
+                INSERT INTO usuarios (nombres, apellidos, correo, contraseña, genero, ubicacion, fecha_nacimiento)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING id, nombres, apellidos, correo, genero, ubicacion, fecha_nacimiento
             `;
             
             // Separar nombre en nombres y apellidos
@@ -254,40 +243,33 @@ router.post('/social-login', async (req, res) => {
             const firstName = nameParts[0] || name;
             const lastName = nameParts.slice(1).join(' ') || '';
             
-            // Contraseña temporal para usuarios sociales (no se usará)
-            const tempPassword = await bcrypt.hash('social_login_' + Date.now(), 10);
+            // Contraseña temporal para usuarios sociales
+            const tempPassword = await bcrypt.hash('social_' + Date.now(), 5); // Menos rounds para más velocidad
             
             const insertResult = await pool.query(insertQuery, [
                 firstName,
                 lastName,
                 email,
                 tempPassword,
-                'Prefiero no decirlo', // género por defecto
-                'No especificada', // ubicación por defecto
-                '2000-01-01', // fecha por defecto
-                provider,
-                photoURL
+                'Prefiero no decirlo',
+                'No especificada',
+                '2000-01-01'
             ]);
             
             user = insertResult.rows[0];
-            console.log('✅ Nuevo usuario social creado:', user.correo);
         }
 
-        // Generar JWT token
+        // Generar JWT token optimizado
         const token = jwt.sign(
-            { 
-                userId: user.id, 
-                email: user.correo,
-                provider: user.provider 
-            },
-            process.env.JWT_SECRET || 'tu_jwt_secret_key',
+            { userId: user.id, correo: user.correo },
+            process.env.JWT_SECRET || 'fallback_secret',
             { expiresIn: '7d' }
         );
 
-        // Login exitoso
+        // Login exitoso - respuesta rápida
         res.status(200).json({
             success: true,
-            message: `¡Bienvenido ${user.nombres}!`,
+            message: 'Login exitoso',
             user: {
                 id: user.id,
                 nombres: user.nombres,
@@ -295,18 +277,111 @@ router.post('/social-login', async (req, res) => {
                 correo: user.correo,
                 genero: user.genero,
                 ubicacion: user.ubicacion,
-                fecha_nacimiento: user.fecha_nacimiento,
-                provider: user.provider,
-                photo_url: user.photo_url
+                fecha_nacimiento: user.fecha_nacimiento
             },
             token
         });
 
     } catch (error) {
-        console.error('❌ Error en login social:', error);
+        console.error('❌ Error en login social:', error.message);
         res.status(500).json({ 
             success: false,
-            message: 'Error interno del servidor: ' + error.message 
+            message: 'Error interno del servidor' 
+        });
+    }
+});
+
+// Ruta GET para obtener datos de usuario por ID
+router.get('/usuarios/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        if (!id || isNaN(parseInt(id))) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID de usuario inválido'
+            });
+        }
+        
+        const userQuery = `
+            SELECT id, nombres, apellidos, correo, genero, ubicacion, fecha_nacimiento
+            FROM usuarios 
+            WHERE id = $1
+        `;
+        const userResult = await pool.query(userQuery, [parseInt(id)]);
+        
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+        
+        const user = userResult.rows[0];
+        res.status(200).json({
+            success: true,
+            usuario: user
+        });
+        
+    } catch (error) {
+        console.error('❌ Error obteniendo usuario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor: ' + error.message
+        });
+    }
+});
+
+// Ruta PUT para actualizar datos de usuario
+router.put('/usuarios/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nombres, apellidos, genero, ubicacion, fecha_nacimiento } = req.body;
+        
+        if (!id || isNaN(parseInt(id))) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID de usuario inválido'
+            });
+        }
+        
+        // Validar campos requeridos
+        if (!nombres || !apellidos || !genero || !ubicacion || !fecha_nacimiento) {
+            return res.status(400).json({
+                success: false,
+                message: 'Todos los campos son requeridos'
+            });
+        }
+        
+        const updateQuery = `
+            UPDATE usuarios 
+            SET nombres = $1, apellidos = $2, genero = $3, ubicacion = $4, fecha_nacimiento = $5
+            WHERE id = $6
+            RETURNING id, nombres, apellidos, correo, genero, ubicacion, fecha_nacimiento
+        `;
+        
+        const result = await pool.query(updateQuery, [
+            nombres, apellidos, genero, ubicacion, fecha_nacimiento, parseInt(id)
+        ]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Datos actualizados exitosamente',
+            usuario: result.rows[0]
+        });
+        
+    } catch (error) {
+        console.error('❌ Error actualizando usuario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor: ' + error.message
         });
     }
 });

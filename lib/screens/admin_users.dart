@@ -210,46 +210,28 @@ class _AdminUsersState extends State<AdminUsers> {
     return Stack(
       children: [
         Container(
-          color: Colors.white,
+          color: const Color(0xFFF8F9FA),
           child: Column(
             children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.only(top: 32, bottom: 24),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF7A45D1),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(32),
-                    bottomRight: Radius.circular(32),
-                  ),
-                ),
-                child: const Center(
-                  child: Text(
-                    'GESTIÓN USUARIOS',
-                    style: TextStyle(
-                      fontFamily: 'AntonSC',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 38,
-                      color: Colors.white,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
+              // Barra de búsqueda sin título
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(20),
                 child: TextField(
+                  onChanged: (value) => setState(() => _search = value),
                   decoration: InputDecoration(
-                    hintText: 'Buscar Usuario',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    hintText: 'Buscar usuarios...',
+                    prefixIcon: const Icon(Icons.search, color: Color(0xFF7A45D1)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF7A45D1)),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      _search = value;
-                    });
-                  },
                 ),
               ),
               const SizedBox(height: 12),

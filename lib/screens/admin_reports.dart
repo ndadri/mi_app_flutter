@@ -3,49 +3,38 @@ import 'report_item.dart';
 
 class AdminReports extends StatelessWidget {
   const AdminReports({super.key});
+  
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: const Color(0xFFF8F9FA),
       child: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.only(top: 32, bottom: 24),
-            decoration: const BoxDecoration(
-              color: Color(0xFF7A45D1),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
-              ),
-            ),
-            child: const Center(
-              child: Text(
-                'REPORTES',
-                style: TextStyle(
-                  fontFamily: 'AntonSC',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 38,
-                  color: Colors.white,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
+          // Barra de búsqueda sin título
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(20),
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Buscar Usuario',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                prefixIcon: const Icon(Icons.search, color: Color(0xFF7A45D1)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF7A45D1)),
+                ),
+                filled: true,
+                fillColor: Colors.white,
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          
+          // Lista de reportes
           Expanded(
             child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               children: const [
                 ReportItem(),
                 ReportItem(),

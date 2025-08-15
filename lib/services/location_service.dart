@@ -27,17 +27,23 @@ class LocationService {
 
   static Future<Position?> getCurrentLocation() async {
     try {
+      print('📍 Solicitando ubicación...');
       bool hasPermission = await requestLocationPermission();
-      if (!hasPermission) return null;
+      if (!hasPermission) {
+        print('❌ Permisos de ubicación denegados');
+        return null;
+      }
 
+      print('✅ Permisos de ubicación concedidos, obteniendo posición...');
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
         timeLimit: const Duration(seconds: 10),
       );
 
+      print('📍 Ubicación obtenida: ${position.latitude}, ${position.longitude}');
       return position;
     } catch (e) {
-      print('Error obteniendo ubicación: $e');
+      print('💥 Error obteniendo ubicación: $e');
       return null;
     }
   }
