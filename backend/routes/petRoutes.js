@@ -26,34 +26,35 @@ router.post('/registrar', async (req, res) => {
             state = '';
         }
 
-        // Validate nombre
-        if (!nombre || typeof nombre !== 'string' || nombre.length === 0) {
-            return res.status(400).json({ mensaje: 'El nombre de la mascota es obligatorio y debe ser un texto válido.' });
+        // Validation
+        // nombre: only letters and spaces, 2-50 chars
+        if (!nombre || !/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,50}$/.test(nombre)) {
+            return res.status(400).json({ mensaje: 'El nombre debe tener entre 2 y 50 letras y solo puede contener letras y espacios.' });
         }
-        // Validate edad
+        // edad: integer 1-30
         const edadNum = Number(edad);
-        if (!edad || isNaN(edadNum) || !Number.isInteger(edadNum) || edadNum <= 0) {
-            return res.status(400).json({ mensaje: 'La edad debe ser un número entero positivo.' });
+        if (!edad || isNaN(edadNum) || !Number.isInteger(edadNum) || edadNum <= 0 || edadNum > 30) {
+            return res.status(400).json({ mensaje: 'La edad debe ser un número entero positivo menor o igual a 30.' });
         }
-        // Validate tipo_animal
+        // tipo_animal: only 'perro' or 'gato'
         if (!tipo_animal || !['perro', 'gato'].includes(tipo_animal)) {
             return res.status(400).json({ mensaje: "El tipo de animal debe ser 'perro' o 'gato'." });
         }
-        // Validate raza
-        if (!raza || typeof raza !== 'string' || raza.length === 0) {
-            return res.status(400).json({ mensaje: 'La raza es obligatoria y debe ser un texto válido.' });
+        // raza: only letters, spaces, 2-50 chars
+        if (!raza || !/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{2,50}$/.test(raza)) {
+            return res.status(400).json({ mensaje: 'La raza debe tener entre 2 y 50 letras y solo puede contener letras y espacios.' });
         }
-        // Validate foto_url (basic URL check)
-        const urlRegex = /^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/i;
+        // foto_url: must be valid URL and end with image extension
+        const urlRegex = /^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?\.(jpg|jpeg|png|gif)$/i;
         if (!foto_url || typeof foto_url !== 'string' || foto_url.length === 0 || !urlRegex.test(foto_url)) {
-            return res.status(400).json({ mensaje: 'La URL de la foto es obligatoria y debe ser válida.' });
+            return res.status(400).json({ mensaje: 'La URL de la foto debe ser válida y terminar en .jpg, .jpeg, .png o .gif.' });
         }
-        // Validate id_duenio
+        // id_duenio: positive integer
         const idDuenioNum = Number(id_duenio);
         if (!id_duenio || isNaN(idDuenioNum) || !Number.isInteger(idDuenioNum) || idDuenioNum <= 0) {
             return res.status(400).json({ mensaje: 'El id_duenio debe ser un número entero positivo.' });
         }
-        // Validate state and convert to boolean
+        // state: boolean or string
         let stateBool;
         if (typeof state === 'boolean') {
             stateBool = state;

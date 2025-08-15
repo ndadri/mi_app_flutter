@@ -1,39 +1,29 @@
 {
-  "name": "backend",
+  "name": "mi_app_flutter-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "app.js",
   "type": "commonjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "reset-db": "node reset_database.js",
-    "add-edad": "node add_edad_column.js",
-    "create-admin": "node create_admin.js",
-    "fix-db": "node fix_database_structure.js",
-    "diagnostic": "node diagnostic_petmatch.js",
-    "setup-matching": "node setup_matching_tables.js",
-    "test-matching": "node test_matching_system.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "migrate": "psql -U postgres -d mi_app_flutter -f migrations/create_usuarios_table.sql && psql -U postgres -d mi_app_flutter -f migrations/create_mascotas_table.sql"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "bcrypt": "^6.0.0",
-    "bcryptjs": "^3.0.2",
-    "body-parser": "^2.2.0",
+    "bcrypt": "^5.1.0",
+    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.1",
-    "mysql2": "^3.14.3",
     "nodemailer": "^7.0.5",
-    "pg": "^8.16.3",
-    "sqlite3": "^5.1.7"
+    "pg": "^8.16.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.0.3"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "description": ""
 }
