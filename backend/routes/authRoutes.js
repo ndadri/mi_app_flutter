@@ -1,3 +1,47 @@
+// Nueva ruta para parámetros globales
+const globalConfig = require('../globalConfig');
+
+// GET: Obtener parámetros globales
+router.get('/config/global', async (req, res) => {
+    try {
+        const config = await globalConfig.getGlobalConfig();
+        res.json({ success: true, config });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error al obtener configuración global.' });
+    }
+});
+
+// POST: Actualizar parámetros globales
+router.post('/config/global', async (req, res) => {
+    try {
+        await globalConfig.updateGlobalConfig(req.body);
+        res.json({ success: true, message: 'Configuración global actualizada.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error al actualizar configuración global.' });
+    }
+});
+// Rutas para parámetros globales
+const globalConfig = require('../globalConfig');
+
+// Obtener parámetros globales
+router.get('/global-config', async (req, res) => {
+    try {
+        const config = await globalConfig.getGlobalConfig();
+        res.json({ success: true, config });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error al obtener configuración global.' });
+    }
+});
+
+// Actualizar parámetros globales
+router.post('/global-config', async (req, res) => {
+    try {
+        await globalConfig.updateGlobalConfig(req.body);
+        res.json({ success: true, message: 'Configuración actualizada.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error al actualizar configuración global.' });
+    }
+});
 const express = require('express');
 const router = express.Router();
 const { Pool } = require('pg');
