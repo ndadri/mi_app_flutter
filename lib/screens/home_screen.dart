@@ -277,6 +277,28 @@ class HomeScreen extends StatelessWidget {
 
                           // Espaciado final
                           SizedBox(height: headerPadding),
+
+                          // Botón para acceder a la pantalla de citas
+                          SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFE040FB),
+                              foregroundColor: Colors.white,
+                              padding: EdgeInsets.symmetric(vertical: 14, horizontal: 28),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              elevation: 4,
+                            ),
+                            icon: const Icon(Icons.event_available),
+                            label: const Text(
+                              'Ver Citas',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/dates');
+                            },
+                          ),
                         ],
                       ),
                     ),
