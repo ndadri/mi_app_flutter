@@ -129,55 +129,55 @@ router.post('/registrar', async (req, res) => {
 // Ruta POST para iniciar sesión
 router.post('/login', async (req, res) => {
     try {
+
         let { username, password } = req.body;
 
-        // Validaciones básicas
         username = typeof username === 'string' ? username.trim() : '';
         password = typeof password === 'string' ? password : '';
 
         if (!username || !password) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: 'Usuario y contraseña son obligatorios.' 
+                message: 'Usuario y contraseña son obligatorios.'
             });
         }
 
-        // Buscar usuario por correo con consulta optimizada
+        // Buscar usuario por correo o username
         const userQuery = `
-            SELECT id, correo, contraseña, nombres, apellidos
-            FROM usuarios 
-            WHERE correo = $1
+            SELECT id, correo, contraseña, nombres, apellidos, username
+            FROM usuarios
+            WHERE correo = $1 OR username = $1
             LIMIT 1
         `;
-        const userResult = await pool.query(userQuery, [username]);
+        const userResult = await pool.query(userQuery, [username.toLowerCase()]);
 
         if (userResult.rows.length === 0) {
-            return res.status(401).json({ 
+            return res.status(401).json({
                 success: false,
-                message: 'Usuario no encontrado.' 
+                message: 'Usuario no encontrado.'
             });
         }
 
         const user = userResult.rows[0];
 
-        // Verificar contraseña de forma optimizada
+        // Verificar contraseña
         const isValidPassword = await bcrypt.compare(password, user.contraseña);
 
         if (!isValidPassword) {
-            return res.status(401).json({ 
+            return res.status(401).json({
                 success: false,
-                message: 'Contraseña incorrecta.' 
+                message: 'Contraseña incorrecta.'
             });
         }
 
-        // Generar JWT de forma más rápida
+        // Generar JWT
         const token = jwt.sign(
             { userId: user.id, correo: user.correo },
             process.env.JWT_SECRET || 'fallback_secret',
             { expiresIn: '7d' }
         );
 
-        // Login exitoso - respuesta simplificada y rápida
+        // Login exitoso
         res.status(200).json({
             success: true,
             message: 'Login exitoso',
@@ -185,7 +185,8 @@ router.post('/login', async (req, res) => {
                 id: user.id,
                 correo: user.correo,
                 nombres: user.nombres,
-                apellidos: user.apellidos
+                apellidos: user.apellidos,
+                username: user.username || null
             },
             token
         });
