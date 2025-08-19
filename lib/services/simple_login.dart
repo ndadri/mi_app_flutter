@@ -7,7 +7,7 @@ class SimpleLogin {
   static Future<Map<String, dynamic>?> loginWithEmail(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/auth/login'),
+        Uri.parse('${ApiConfig.baseUrl}/api/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': email,
@@ -39,19 +39,31 @@ class SimpleLogin {
 
   // Registro solo con backend - SIN GOOGLE
   static Future<Map<String, dynamic>?> registerWithEmail(
-    String email, 
-    String password, 
-    String name
+    String nombres,
+    String apellidos,
+    String correo,
+    String contrasena,
+    String genero,
+    String ubicacion,
+    String fechaNacimiento,
+    {Map<String, dynamic>? coordenadas}
   ) async {
     try {
+      final Map<String, dynamic> data = {
+        'nombres': nombres,
+        'apellidos': apellidos,
+        'correo': correo,
+        'contrasena': contrasena,
+        'genero': genero,
+        'ubicacion': ubicacion,
+        'fecha_nacimiento': fechaNacimiento,
+        if (coordenadas != null) 'coordenadas': coordenadas,
+      };
+      print('📤 JSON enviado al backend: ' + jsonEncode(data));
       final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/auth/register'),
+        Uri.parse('${ApiConfig.baseUrl}/api/auth/registrar'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-          'name': name,
-        }),
+        body: jsonEncode(data),
       );
 
       if (response.statusCode == 201) {
@@ -59,7 +71,7 @@ class SimpleLogin {
         return {
           'success': true,
           'message': 'Registro exitoso',
-          'user': data['user'],
+          'user': data['usuario'],
         };
       } else {
         return {

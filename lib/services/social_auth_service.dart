@@ -2,6 +2,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config/api_config.dart';
 
 class SocialAuthService {
   // Google Sign-In con configuración directa y completa
@@ -171,7 +172,7 @@ class SocialAuthService {
   ) async {
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.1.24:3002/api/social-login'),
+        Uri.parse(ApiConfig.socialLoginEndpoint),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'email': email,

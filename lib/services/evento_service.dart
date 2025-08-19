@@ -4,9 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EventoService {
-  static const String baseUrl = 'http://192.168.1.24:3002/api';
-  
-  // Obtener ID de usuario
+static const String baseUrl = 'http://10.56.142.7:3002';  // Obtener ID de usuario
   static Future<String?> _getUserId() async {
     final prefs = await SharedPreferences.getInstance();
     

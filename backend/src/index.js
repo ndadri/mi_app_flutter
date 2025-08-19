@@ -74,10 +74,10 @@ const authRoutes = require('../routes/authRoutes');
 const eventoRoutes = require('../routes/eventoRoutes');
 //const locationRoutes = require('../routes/locationRoutes');
 //const passwordResetRoutes = require('../routes/passwordResetRoutes');
-app.use('/api', authRoutes);
-app.use('/api', eventoRoutes);
-//app.use('/api', locationRoutes);
-//app.use('/api', passwordResetRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/eventos', eventoRoutes);
+//app.use('/api/location', locationRoutes);
+//app.use('/api/password-reset', passwordResetRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
