@@ -1,9 +1,117 @@
 // Importación del paquete de Flutter
 import 'package:flutter/material.dart';
+import '../services/match_service.dart';
 
 // Clase principal de la pantalla HomeScreen, que se mostrará al iniciar la app
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key}); // Constructor de la clase HomeScreen
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // Variables para manejar la mascota actual
+  Map<String, dynamic>? mascotaActual;
+  bool isLoading = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    // TODO: Cargar mascotas para mostrar
+  }
+  
+  // Función para manejar like/dislike
+  Future<void> _handleSwipe(bool isLike) async {
+    if (mascotaActual == null || isLoading) return;
+    
+    setState(() {
+      isLoading = true;
+    });
+    
+    final resultado = await MatchService.darLike(
+      mascotaId: mascotaActual!['id'],
+      isLike: isLike,
+    );
+    
+    setState(() {
+      isLoading = false;
+    });
+    
+    if (resultado['success']) {
+      if (resultado['isMatch'] == true) {
+        // ¡HAY MATCH! Mostrar notificación
+        _mostrarNotificacionMatch(resultado['match']);
+      }
+      
+      // TODO: Cargar siguiente mascota
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(resultado['message']),
+          backgroundColor: resultado['isMatch'] == true ? Colors.green : Colors.blue,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(resultado['message']),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+  
+  // Mostrar notificación de match
+  void _mostrarNotificacionMatch(Map<String, dynamic> match) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.favorite, color: Colors.red, size: 30),
+            SizedBox(width: 10),
+            Text('¡Es un Match!', style: TextStyle(color: Colors.red)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '🎉 Tu mascota hizo match con ${match['mascota_2']['nombre']}!',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Ahora pueden chatear en la sección de Matches',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('Continuar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.pushNamed(context, '/matches');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFFE91E63),
+            ),
+            child: Text('Ver Matches', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +371,7 @@ class HomeScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               _circleButton(Icons.close, Colors.redAccent,
-                                  buttonSize, iconSize),
+                                  buttonSize, iconSize, () => _handleSwipe(false)),
                               SizedBox(
                                   width: isDesktop
                                       ? 70
@@ -271,7 +379,7 @@ class HomeScreen extends StatelessWidget {
                                           ? 55
                                           : 45), // Espacio entre botones
                               _circleButton(Icons.favorite, Colors.green,
-                                  buttonSize, iconSize),
+                                  buttonSize, iconSize, () => _handleSwipe(true)),
                             ],
                           ),
 
@@ -279,12 +387,12 @@ class HomeScreen extends StatelessWidget {
                           SizedBox(height: headerPadding),
 
                           // Botón para acceder a la pantalla de citas
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFE040FB),
                               foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 14, horizontal: 28),
+                              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 28),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
                               ),
@@ -400,7 +508,7 @@ class HomeScreen extends StatelessWidget {
 
   // Widget para los botones circulares (like y dislike)
   Widget _circleButton(
-      IconData icon, Color color, double size, double iconSize) {
+      IconData icon, Color color, double size, double iconSize, VoidCallback onPressed) {
     return Container(
       width: size, // Ancho del botón
       height: size, // Alto del botón
@@ -415,9 +523,7 @@ class HomeScreen extends StatelessWidget {
       child: IconButton(
         icon: Icon(icon, size: iconSize), // Ícono dentro del botón
         color: color, // Color del ícono (rojo para dislike, verde para like)
-        onPressed: () {
-          // Aquí irá la lógica de swipe (no implementada aún)
-        },
+        onPressed: isLoading ? null : onPressed, // Deshabilitar si está cargando
       ),
     );
   }

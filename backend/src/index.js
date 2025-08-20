@@ -46,36 +46,83 @@ async function verifyDatabaseConnection() {
 
 // Middleware
 app.use(cors({
-  origin: function (origin, callback) {
-    // Permitir localhost en cualquier puerto para desarrollo
-    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
+  origin: true, // Permitir todas las conexiones por ahora
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
 }));
-app.use(express.json());
+
+// Headers adicionales para móviles
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  // Responder a preflight requests
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+    return;
+  }
+  
+  next();
+});
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Middleware de logging detallado
 app.use((req, res, next) => {
-  console.log(`📝 ${new Date().toISOString()} - ${req.method} ${req.path}`);
+  const timestamp = new Date().toISOString();
+  const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 'unknown';
+  
+  console.log(`📝 ${timestamp} - ${req.method} ${req.path}`);
+  console.log(`🌐 Cliente IP: ${clientIP}`);
+  console.log(`📱 User-Agent: ${req.get('User-Agent') || 'No User-Agent'}`);
+  console.log(`🔗 Origin: ${req.get('Origin') || 'No Origin'}`);
+  
+  if (req.method === 'POST' && req.path.includes('/login')) {
+    console.log('🔐 PETICIÓN DE LOGIN DETECTADA');
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Body:', JSON.stringify(req.body, null, 2));
+  }
+  
   if (req.method === 'POST' && req.path.includes('/eventos')) {
     console.log('🎯 PETICIÓN DE CREAR EVENTO DETECTADA');
     console.log('Headers:', req.headers);
     console.log('Body:', req.body);
   }
+  
   next();
 });
 
 // Importar y usar las rutas de autenticación
 const authRoutes = require('../routes/authRoutes');
 const eventoRoutes = require('../routes/eventoRoutes');
+
+// Importar matchRoutes con manejo de errores
+let matchRoutes = null;
+try {
+    matchRoutes = require('../routes/matchRoutes');
+    console.log('✅ matchRoutes cargado correctamente');
+} catch (error) {
+    console.error('❌ Error cargando matchRoutes:', error.message);
+    console.error('Stack:', error.stack);
+}
+
 //const locationRoutes = require('../routes/locationRoutes');
 //const passwordResetRoutes = require('../routes/passwordResetRoutes');
+
 app.use('/api/auth', authRoutes);
 app.use('/api/eventos', eventoRoutes);
+
+// Solo usar matchRoutes si se cargó correctamente
+if (matchRoutes) {
+    app.use('/api/matches', matchRoutes);
+    console.log('✅ Rutas de matches configuradas en /api/matches');
+} else {
+    console.error('❌ No se pudieron configurar las rutas de matches');
+}
+
 //app.use('/api/location', locationRoutes);
 //app.use('/api/password-reset', passwordResetRoutes);
 
@@ -91,6 +138,7 @@ app.get('/', (req, res) => {
     endpoints: [
       '/api/auth',
       '/api/eventos',
+      '/api/matches',
       '/api/mascotas',
       '/api/chat',
       '/api/reports'
@@ -129,11 +177,48 @@ app.get('/health', async (req, res) => {
 
 // Ruta de prueba simple (sin base de datos)
 app.get('/test', (req, res) => {
+  const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+  console.log(`🧪 Test endpoint accedido desde: ${clientIP}`);
+  
   res.json({
     success: true,
     message: 'Backend funcionando correctamente - Sin base de datos',
     serverTime: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    clientIP: clientIP,
+    headers: req.headers
+  });
+});
+
+// Endpoint específico para probar desde móviles
+app.get('/mobile-test', (req, res) => {
+  const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+  console.log(`📱 Mobile test endpoint accedido desde: ${clientIP}`);
+  
+  res.json({
+    success: true,
+    message: '¡Conexión desde móvil exitosa!',
+    timestamp: new Date().toISOString(),
+    clientInfo: {
+      ip: clientIP,
+      userAgent: req.get('User-Agent'),
+      origin: req.get('Origin')
+    }
+  });
+});
+
+// Endpoint para probar login sin autenticación real
+app.post('/test-login', (req, res) => {
+  const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+  console.log(`🔐 Test login desde: ${clientIP}`);
+  console.log('Body recibido:', req.body);
+  
+  res.json({
+    success: true,
+    message: 'Test login exitoso',
+    timestamp: new Date().toISOString(),
+    receivedData: req.body,
+    clientIP: clientIP
   });
 });
 
@@ -154,22 +239,36 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Iniciar servidor con verificación de base de datos
-// Fixed frontend dependency issue - backend only serves API endpoints
+// Iniciar el servidor con verificación de base de datos
 const PORT = process.env.PORT || 3002;
 
-// Validar variables de entorno críticas
-const requiredEnvVars = ['JWT_SECRET'];
-const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
-
-if (missingEnvVars.length > 0) {
-  console.error(`❌ Variables de entorno faltantes: ${missingEnvVars.join(', ')}`);
-  console.log('📝 Variables disponibles:', {
-    NODE_ENV: process.env.NODE_ENV,
-    PORT: process.env.PORT,
-    DB_HOST: process.env.DB_HOST ? 'SET' : 'NOT SET',
-    JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET'
+// Función simple para iniciar el servidor
+function startServer() {
+  console.log('🚀 Iniciando servidor...');
+  
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log('\n🚀 ===== SERVIDOR PETMATCH INICIADO ===== 🚀');
+    console.log(`📡 Puerto: ${PORT}`);
+    console.log(`🌐 Servidor escuchando en TODAS las interfaces de red`);
+    console.log('\n📱 ACCESO DESDE DISPOSITIVOS:');
+    console.log(`   🖥️  Local: http://localhost:${PORT}`);
+    console.log(`   🖥️  Local: http://127.0.0.1:${PORT}`);
+    console.log(`   📱 Red Local: http://192.168.1.24:${PORT}`);
+    console.log(`   � Para tu app Flutter: 192.168.1.24:${PORT}`);
+    console.log('\n✅ ¡Servidor listo para recibir conexiones!\n');
   });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`❌ Puerto ${PORT} ya está en uso`);
+      console.log('💡 Prueba con: taskkill /f /im node.exe');
+    } else {
+      console.error('❌ Error del servidor:', err);
+    }
+    process.exit(1);
+  });
+
+  return server;
 }
 
 // Verificar conexión a base de datos al iniciar
@@ -183,23 +282,57 @@ async function startServer() {
     console.error('Error inicial de BD:', error.message);
   }
   
+  // Obtener todas las interfaces de red disponibles
+  const os = require('os');
+  const networkInterfaces = os.networkInterfaces();
+  const ips = [];
+  
+  Object.keys(networkInterfaces).forEach((interfaceName) => {
+    networkInterfaces[interfaceName].forEach((iface) => {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        ips.push(iface.address);
+      }
+    });
+  });
+  
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-    console.log(`🌐 Servidor escuchando en todas las interfaces (0.0.0.0:${PORT})`);
-    console.log(`📧 Email configurado: ${process.env.EMAIL_USER ? '✅' : '❌'}`);
-    console.log(`🗄️ Base de datos: ${dbConnected ? '✅ Conectada' : '❌ Error de conexión'}`);
-    console.log(`🔑 JWT Secret: ${process.env.JWT_SECRET ? '✅' : '❌'}`);
-    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log('\n🚀 ===== SERVIDOR PETMATCH INICIADO ===== 🚀');
+    console.log(`📡 Puerto: ${PORT}`);
+    console.log(`🌐 Servidor escuchando en TODAS las interfaces de red`);
+    console.log('\n📱 ACCESO DESDE DISPOSITIVOS:');
+    console.log(`   🖥️  Local: http://localhost:${PORT}`);
+    console.log(`   🖥️  Local: http://127.0.0.1:${PORT}`);
+    
+    if (ips.length > 0) {
+      ips.forEach(ip => {
+        console.log(`   📱 Red Local: http://${ip}:${PORT}`);
+        console.log(`   � Para tu app Flutter: ${ip}:${PORT}`);
+      });
+    }
+    
+    console.log('\n🔧 ESTADO DEL SISTEMA:');
+    console.log(`   📧 Email: ${process.env.EMAIL_USER ? '✅ Configurado' : '❌ No configurado'}`);
+    console.log(`   🗄️  Base de datos: ${dbConnected ? '✅ Conectada' : '❌ Error de conexión'}`);
+    console.log(`   🔑 JWT Secret: ${process.env.JWT_SECRET ? '✅ Configurado' : '❌ No configurado'}`);
+    console.log(`   🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+    
+    console.log('\n🔗 ENDPOINTS DISPONIBLES:');
+    console.log('   📋 GET  / - Estado del servidor');
+    console.log('   🏥 GET  /health - Diagnóstico completo');
+    console.log('   🧪 GET  /test - Prueba sin BD');
+    console.log('   👤 POST /api/auth/registrar - Registro de usuarios');
+    console.log('   🔐 POST /api/auth/login - Iniciar sesión');
+    console.log('   📱 POST /api/auth/social-login - Login social');
+    console.log('   🎉 POST /api/eventos/* - Gestión de eventos');
     
     if (!dbConnected) {
-      console.warn('⚠️ ADVERTENCIA: Servidor iniciado sin conexión a base de datos');
-      console.warn('⚠️ Algunas funcionalidades pueden no funcionar correctamente');
+      console.warn('\n⚠️  ADVERTENCIA: Servidor iniciado sin conexión a base de datos');
+      console.warn('⚠️  Algunas funcionalidades pueden no funcionar correctamente');
     }
+    
+    console.log('\n✅ ¡Servidor listo para recibir conexiones desde cualquier dispositivo!\n');
   });
 }
 
-// Iniciar el servidor con manejo de errores
-startServer().catch((error) => {
-  console.error('❌ Error iniciando servidor:', error.message);
-  process.exit(1);
-});
+// Iniciar el servidor
+startServer();

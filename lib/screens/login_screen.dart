@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'forgot_password_screen.dart';
 import 'home_screen.dart';
 import 'admin_panel_screen.dart';
-import '../config/api_config.dart';
 import '../services/enhanced_google_auth.dart';
+import '../services/auto_login_service.dart'; // Nuestro nuevo servicio automático
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // Método para manejar el inicio de sesión con backend - OPTIMIZADO
+  // Método para manejar el inicio de sesión - AUTO DETECT IP
   Future<void> loginUsuario(String username, String password) async {
     setState(() {
       _isLoading = true;
@@ -32,6 +30,8 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      print('🚀 Iniciando proceso de login...');
+      
       // Verificar credenciales de administrador rápidamente
       if (username == 'andersonsoto102@gmail.com' && password == 'Andersonsoto10') {
         setState(() {
@@ -45,35 +45,40 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // Login normal optimizado con timeout reducido
-      final response = await http.post(
-        Uri.parse(ApiConfig.loginEndpoint),
-        headers: {
-          'Content-Type': 'application/json',
-          'Connection': 'keep-alive',
-        },
-        body: json.encode({
-          'username': username,
-          'password': password,
-        }),
-      ).timeout(const Duration(seconds: 8)); // Timeout de 8 segundos
+      // Usar el servicio automático que encuentra la IP correcta
+      final result = await AutoLoginService.autoLogin(username, password);
 
-      final responseData = json.decode(response.body);
-
-      if (response.statusCode == 200 && responseData['success']) {
-        // Guardar información del usuario en SharedPreferences de forma paralela
+      if (result['success']) {
+        // Guardar información del usuario en SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await Future.wait([
-          prefs.setInt('user_id', responseData['user']['id']),
-          prefs.setString('user_email', responseData['user']['correo']),
-          prefs.setString('user_token', responseData['token']),
+          prefs.setInt('user_id', result['user']['id']),
+          prefs.setString('user_email', result['user']['correo']),
+          prefs.setString('user_token', result['token']),
         ]);
+        
+        // Si encontramos una IP que funciona, guardarla para futuros usos
+        if (result['workingIP'] != null) {
+          await prefs.setString('working_ip', result['workingIP']);
+          print('💾 IP guardada para futuros usos: ${result['workingIP']}');
+        }
         
         setState(() {
           _isLoading = false;
         });
         
-        // Navegación inmediata sin snackbar para mayor velocidad
+        print('🎉 Login exitoso, navegando a home...');
+        
+        // Mostrar mensaje de éxito brevemente
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('¡Login exitoso!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+        
+        // Navegación a home
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -81,14 +86,61 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         setState(() {
           _isLoading = false;
-          _errorMessage = responseData['message'] ?? 'Usuario o contraseña incorrectos';
+          _errorMessage = result['message'];
         });
+        
+        print('❌ Login falló: ${result['message']}');
+      }
+    } catch (e) {
+      print('💥 Error inesperado en login: $e');
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Error inesperado: $e';
+      });
+    }
+  }
+
+  // Función para probar conexión (debug)
+  Future<void> _testConnection() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      print('🧪 Iniciando prueba de conexión...');
+      
+      final canConnect = await AutoLoginService.quickConnectionTest();
+      
+      setState(() {
+        _isLoading = false;
+      });
+      
+      if (canConnect) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ ¡Conexión exitosa! El servidor está accesible.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        print('✅ Prueba de conexión exitosa');
+      } else {
+        setState(() {
+          _errorMessage = 'No se pudo conectar al servidor.\n\n'
+                         'Verifica que:\n'
+                         '• Tu teléfono y PC estén en la misma WiFi\n'
+                         '• El servidor esté corriendo\n'
+                         '• No haya firewall bloqueando';
+        });
+        print('❌ Prueba de conexión falló');
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Error de conexión: $e';
+        _errorMessage = 'Error en prueba de conexión: $e';
       });
+      print('💥 Error en prueba: $e');
     }
   }
 
@@ -308,10 +360,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                     }
                                   : null,
                               child: _isLoading
-                                  ? SizedBox(
+                                  ? const SizedBox(
                                       height: 20,
                                       width: 20,
-                                      child: const CircularProgressIndicator(
+                                      child: CircularProgressIndicator(
                                         color: Colors.white,
                                         strokeWidth: 2,
                                       ),
@@ -388,6 +440,25 @@ class _LoginScreenState extends State<LoginScreen> {
                           icon: const Icon(Icons.facebook, color: Color(0xFF1877F3)),
                           label: const Text('Continue with Facebook'),
                           onPressed: _isLoading ? null : _loginWithFacebook,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      
+                      // Botón de prueba de conexión (solo para debug)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 36),
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size.fromHeight(44),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          icon: const Icon(Icons.wifi_find),
+                          label: const Text('🧪 Probar Conexión'),
+                          onPressed: _isLoading ? null : _testConnection,
                         ),
                       ),
                       const SizedBox(height: 10),
