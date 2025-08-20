@@ -1,49 +1,6 @@
-// Nueva ruta para parámetros globales
-const globalConfig = require('../globalConfig');
-
-// GET: Obtener parámetros globales
-router.get('/config/global', async (req, res) => {
-    try {
-        const config = await globalConfig.getGlobalConfig();
-        res.json({ success: true, config });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Error al obtener configuración global.' });
-    }
-});
-
-// POST: Actualizar parámetros globales
-router.post('/config/global', async (req, res) => {
-    try {
-        await globalConfig.updateGlobalConfig(req.body);
-        res.json({ success: true, message: 'Configuración global actualizada.' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Error al actualizar configuración global.' });
-    }
-});
-// Rutas para parámetros globales
-const globalConfig = require('../globalConfig');
-
-// Obtener parámetros globales
-router.get('/global-config', async (req, res) => {
-    try {
-        const config = await globalConfig.getGlobalConfig();
-        res.json({ success: true, config });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Error al obtener configuración global.' });
-    }
-});
-
-// Actualizar parámetros globales
-router.post('/global-config', async (req, res) => {
-    try {
-        await globalConfig.updateGlobalConfig(req.body);
-        res.json({ success: true, message: 'Configuración actualizada.' });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Error al actualizar configuración global.' });
-    }
-});
 const express = require('express');
 const router = express.Router();
+const globalConfig = require('../globalConfig');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -53,26 +10,45 @@ const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
 });
 
+// Rutas para parámetros globales
+router.get('/global-config', async (req, res) => {
+    try {
+        const config = await globalConfig.getGlobalConfig();
+        res.json({ success: true, config });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error al obtener configuración global.' });
+    }
+});
+
+router.post('/global-config', async (req, res) => {
+    try {
+        await globalConfig.updateGlobalConfig(req.body);
+        res.json({ success: true, message: 'Configuración actualizada.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error al actualizar configuración global.' });
+    }
+});
+
 // Ruta POST para registrar un usuario
 router.post('/registrar', async (req, res) => {
     try {
         console.log('📝 Datos recibidos:', JSON.stringify(req.body, null, 2));
         
-        let { nombres, apellidos, correo, contraseña, genero, ubicacion, fecha_nacimiento, coordenadas } = req.body;
+        let { nombres, apellidos, correo, contrasena, genero, ubicacion, fecha_nacimiento, coordenadas } = req.body;
 
         // Validaciones básicas
         nombres = typeof nombres === 'string' ? nombres.trim() : '';
         apellidos = typeof apellidos === 'string' ? apellidos.trim() : '';
         correo = typeof correo === 'string' ? correo.trim().toLowerCase() : '';
-        contraseña = typeof contraseña === 'string' ? contraseña : '';
+        contrasena = typeof contrasena === 'string' ? contrasena : '';
         genero = typeof genero === 'string' ? genero.trim() : '';
         ubicacion = typeof ubicacion === 'string' ? ubicacion.trim() : '';
 
-        console.log('🔍 Contraseña procesada:', { 
-            original: req.body.contraseña, 
-            processed: contraseña, 
-            length: contraseña.length,
-            type: typeof contraseña
+        console.log('🔍 Contrasena procesada:', { 
+            original: req.body.contrasena, 
+            processed: contrasena, 
+            length: contrasena.length,
+            type: typeof contrasena
         });
 
         // Validar nombres
@@ -91,8 +67,8 @@ router.post('/registrar', async (req, res) => {
             return res.status(400).json({ mensaje: 'El correo electrónico no es válido.' });
         }
 
-        // Validar contraseña
-        if (!contraseña || contraseña.length < 6) {
+        // Validar contrasena
+        if (!contrasena || contrasena.length < 6) {
             return res.status(400).json({ mensaje: 'La contraseña debe tener al menos 6 caracteres.' });
         }
 
@@ -119,9 +95,9 @@ router.post('/registrar', async (req, res) => {
             return res.status(400).json({ mensaje: 'Este correo electrónico ya está registrado.' });
         }
 
-        // Encriptar la contraseña
+        // Encriptar la contrasena
         const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(contraseña, saltRounds);
+        const hashedPassword = await bcrypt.hash(contrasena, saltRounds);
 
         // Generar username automáticamente basado en nombres (temporalmente comentado)
         let username = nombres.toLowerCase().replace(/\s+/g, '');
@@ -137,7 +113,7 @@ router.post('/registrar', async (req, res) => {
 
         // Insertar el usuario en la base de datos (sin username temporalmente)
         const query = `
-            INSERT INTO usuarios (nombres, apellidos, correo, contraseña, genero, ubicacion, fecha_nacimiento, latitud, longitud)
+            INSERT INTO usuarios (nombres, apellidos, correo, contrasena, genero, ubicacion, fecha_nacimiento, latitud, longitud)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING id, nombres, apellidos, correo, genero, ubicacion, fecha_nacimiento
         `;

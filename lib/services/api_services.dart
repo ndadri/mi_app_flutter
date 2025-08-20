@@ -1,12 +1,12 @@
+
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config/api_config.dart';
 
 class ApiService {
-  static const String baseUrl = '';  // Cambia el host si es necesario
-
-  // Función para obtener las mascotas desde el backend
+  // Usa la baseUrl centralizada
   Future<List<dynamic>> fetchPets() async {
-    final response = await http.get(Uri.parse('$baseUrl/pets'));
+  final response = await http.get(Uri.parse('${ApiConfig.baseUrl}/pets'));
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -18,7 +18,7 @@ class ApiService {
   // Función para crear una mascota
   Future<void> createPet(Map<String, dynamic> petData) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/pet'),
+      Uri.parse('${ApiConfig.baseUrl}/pet'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(petData),
     );

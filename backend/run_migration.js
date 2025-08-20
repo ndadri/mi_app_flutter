@@ -4,7 +4,7 @@ const path = require('path');
 
 // Configuración de la base de datos
 const pool = new Pool({
-    connectionString: 'postgresql://anderson:123456@localhost:5432/petmatch'
+    connectionString: 'postgresql://Alexis:123@localhost:5432/petmatch'
 });
 
 async function runMigration() {

@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 
 async function addUsernameColumn() {
     const pool = new Pool({
-        connectionString: 'postgresql://anderson:123456@localhost:5432/petmatch',
+    connectionString: 'postgresql://Alexis:123@localhost:5432/petmatch'
     });
 
     try {

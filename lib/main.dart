@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 // Firebase habilitado para usar con Google Sign-In
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'screens/splash_screen.dart'; // Pantalla de splash animada
 import 'screens/login_screen.dart'; // Pantalla de login
 import 'screens/register_screen.dart'; // Pantalla de registro
 import 'screens/home_screen.dart'; // Pantalla de inicio
@@ -50,9 +51,9 @@ class PetMatchApp extends StatelessWidget {
           ),
         ),
       ),
-      initialRoute: '/login', // Establece la ruta inicial de la app
+      initialRoute: '/', // Establece la ruta inicial de la app (splash screen)
       routes: {
-        '/': (context) => const HomeScreen(),
+        '/': (context) => const SplashScreen(), // Pantalla de splash inicial
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),

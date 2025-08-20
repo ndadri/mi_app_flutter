@@ -41,31 +41,46 @@ const upload = multer({
   }
 });
 
-// GET - Obtener todos los eventos con información de asistencia del usuario
-router.get('/eventos/:userId', async (req, res) => {
+// GET - Obtener todos los eventos con información de asistencia del usuario (OPTIMIZADO)
+router.get('/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     
+    // Consulta optimizada con límite y mejor indexación
     const query = `
       SELECT 
-        e.*,
+        e.id,
+        e.nombre,
+        e.fecha,
+        e.hora,
+        e.lugar,
+        e.imagen,
+        e.fecha_creacion,
+        e.creado_por,
         ea.asistira,
         COUNT(ea2.id) as total_asistentes
       FROM eventos e
       LEFT JOIN evento_asistencias ea ON e.id = ea.evento_id AND ea.usuario_id = $1
       LEFT JOIN evento_asistencias ea2 ON e.id = ea2.evento_id AND ea2.asistira = true
-      GROUP BY e.id, ea.asistira
+      WHERE e.fecha_creacion > NOW() - INTERVAL '90 days'
+      GROUP BY e.id, e.nombre, e.fecha, e.hora, e.lugar, e.imagen, e.fecha_creacion, e.creado_por, ea.asistira
       ORDER BY e.fecha_creacion DESC
+      LIMIT 50
     `;
     
+    const startTime = Date.now();
     const result = await pool.query(query, [userId]);
+    const endTime = Date.now();
+    
+    console.log(`⚡ Consulta de eventos ejecutada en ${endTime - startTime}ms - ${result.rows.length} eventos`);
     
     res.json({
       success: true,
-      eventos: result.rows
+      eventos: result.rows,
+      queryTime: `${endTime - startTime}ms`
     });
   } catch (error) {
-    console.error('Error al obtener eventos:', error);
+    console.error('❌ Error al obtener eventos:', error);
     res.status(500).json({
       success: false,
       message: 'Error al obtener eventos',
@@ -75,7 +90,7 @@ router.get('/eventos/:userId', async (req, res) => {
 });
 
 // POST - Crear nuevo evento (VERSIÓN SIMPLIFICADA)
-router.post('/eventos', upload.single('imagen'), async (req, res) => {
+router.post('/', upload.single('imagen'), async (req, res) => {
   console.log('� === CREAR EVENTO - VERSIÓN SIMPLIFICADA ===');
   
   try {
@@ -135,7 +150,7 @@ router.post('/eventos', upload.single('imagen'), async (req, res) => {
 });
 
 // POST - Marcar asistencia a evento
-router.post('/eventos/:eventoId/asistencia', async (req, res) => {
+router.post('/:eventoId/asistencia', async (req, res) => {
   try {
     const { eventoId } = req.params;
     const { usuario_id, asistira } = req.body;
@@ -171,7 +186,7 @@ router.post('/eventos/:eventoId/asistencia', async (req, res) => {
 });
 
 // GET - Obtener asistentes de un evento
-router.get('/eventos/:eventoId/asistentes', async (req, res) => {
+router.get('/:eventoId/asistentes', async (req, res) => {
   try {
     const { eventoId } = req.params;
     
@@ -205,7 +220,7 @@ router.get('/eventos/:eventoId/asistentes', async (req, res) => {
 });
 
 // DELETE - Eliminar evento (solo el creador)
-router.delete('/eventos/:eventoId', async (req, res) => {
+router.delete('/:eventoId', async (req, res) => {
   try {
     const { eventoId } = req.params;
     const { usuario_id } = req.body;

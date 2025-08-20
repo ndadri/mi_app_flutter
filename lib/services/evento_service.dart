@@ -4,8 +4,13 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EventoService {
-  static const String baseUrl = 'http://192.168.1.24:3002/api';
+  static const String baseUrl = 'http://192.168.1.24:3002';
   
+  // Cache de eventos para mejorar rendimiento
+  static List<Map<String, dynamic>>? _eventosCache;
+  static DateTime? _lastCacheUpdate;
+  static const Duration _cacheValidDuration = Duration(minutes: 2);
+
   // Obtener ID de usuario
   static Future<String?> _getUserId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -25,9 +30,35 @@ class EventoService {
     return null;
   }
   
-  // Obtener todos los eventos con asistencia del usuario
-  static Future<Map<String, dynamic>> obtenerEventos() async {
+  // Verificar si el cache es válido
+  static bool _isCacheValid() {
+    if (_eventosCache == null || _lastCacheUpdate == null) {
+      return false;
+    }
+    
+    final now = DateTime.now();
+    final timeDifference = now.difference(_lastCacheUpdate!);
+    return timeDifference < _cacheValidDuration;
+  }
+  
+  // Limpiar cache
+  static void clearCache() {
+    _eventosCache = null;
+    _lastCacheUpdate = null;
+  }
+  
+  // Obtener todos los eventos con asistencia del usuario (OPTIMIZADO CON CACHE)
+  static Future<Map<String, dynamic>> obtenerEventos({bool forceRefresh = false}) async {
     try {
+      // Usar cache si es válido y no se fuerza refresh
+      if (!forceRefresh && _isCacheValid()) {
+        return {
+          'success': true,
+          'eventos': _eventosCache,
+          'fromCache': true
+        };
+      }
+      
       final userId = await _getUserId();
       if (userId == null) {
         return {
@@ -37,21 +68,39 @@ class EventoService {
       }
       
       final response = await http.get(
-        Uri.parse('$baseUrl/eventos/$userId'),
+        Uri.parse('$baseUrl/api/eventos/$userId'),
         headers: {
           'Content-Type': 'application/json',
         },
-      );
+      ).timeout(Duration(seconds: 5)); // Timeout reducido para carga más rápida
       
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        final data = json.decode(response.body);
+        
+        // Actualizar cache
+        if (data['success'] && data['eventos'] != null) {
+          _eventosCache = List<Map<String, dynamic>>.from(data['eventos']);
+          _lastCacheUpdate = DateTime.now();
+        }
+        
+        return data;
       } else {
         return {
           'success': false,
-          'message': 'Error al obtener eventos: ${response.statusCode}'
+          'message': 'Error del servidor: ${response.statusCode}'
         };
       }
     } catch (e) {
+      // Si hay error y tenemos cache, devolver cache con advertencia
+      if (_eventosCache != null) {
+        return {
+          'success': true,
+          'eventos': _eventosCache,
+          'fromCache': true,
+          'warning': 'Mostrando datos guardados. Verifica tu conexión.'
+        };
+      }
+      
       return {
         'success': false,
         'message': 'Error de conexión: $e'
@@ -87,7 +136,7 @@ class EventoService {
       
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('$baseUrl/eventos'),
+        Uri.parse('$baseUrl/api/eventos'),
       );
       
       // Agregar campos de texto con validación
@@ -153,7 +202,7 @@ class EventoService {
       }
       
       final response = await http.post(
-        Uri.parse('$baseUrl/eventos/$eventoId/asistencia'),
+        Uri.parse('$baseUrl/api/eventos/$eventoId/asistencia'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -183,7 +232,7 @@ class EventoService {
   static Future<Map<String, dynamic>> obtenerAsistentes(int eventoId) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/eventos/$eventoId/asistentes'),
+        Uri.parse('$baseUrl/api/eventos/$eventoId/asistentes'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -217,7 +266,7 @@ class EventoService {
       }
       
       final response = await http.delete(
-        Uri.parse('$baseUrl/eventos/$eventoId'),
+        Uri.parse('$baseUrl/api/eventos/$eventoId'),
         headers: {
           'Content-Type': 'application/json',
         },

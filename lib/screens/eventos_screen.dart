@@ -44,26 +44,82 @@ class _EventosScreenState extends State<EventosScreen> {
 
   // Cargar eventos desde la base de datos
   Future<void> _cargarEventos() async {
+    if (!mounted) return;
+    
     setState(() {
       isLoading = true;
     });
 
-    final resultado = await EventoService.obtenerEventos();
-    
-    if (resultado['success']) {
-      setState(() {
-        eventos = List<Map<String, dynamic>>.from(resultado['eventos']);
-        isLoading = false;
-      });
-    } else {
-      setState(() {
-        isLoading = false;
-      });
+    try {
+      // Reducido timeout a 5 segundos para carga más rápida
+      final resultado = await EventoService.obtenerEventos()
+          .timeout(Duration(seconds: 5));
+      
       if (mounted) {
+        if (resultado['success']) {
+          setState(() {
+            eventos = List<Map<String, dynamic>>.from(resultado['eventos'] ?? []);
+            isLoading = false;
+          });
+          
+          // Mostrar snackbar de éxito solo si hay eventos
+          if (eventos.isNotEmpty) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${eventos.length} eventos cargados'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } else {
+          setState(() {
+            eventos = [];
+            isLoading = false;
+          });
+          // No mostrar error si simplemente no hay eventos
+          if (resultado['message'] != null && !resultado['message'].toString().toLowerCase().contains('no hay eventos')) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(resultado['message'] ?? 'Error al cargar eventos'),
+                backgroundColor: Colors.orange,
+                action: SnackBarAction(
+                  label: 'Reintentar',
+                  textColor: Colors.white,
+                  onPressed: () => _cargarEventos(),
+                ),
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          eventos = [];
+          isLoading = false;
+        });
+        
+        // Mensaje de error más específico
+        String errorMessage = 'Error de conexión. Verifica tu internet.';
+        if (e.toString().contains('TimeoutException')) {
+          errorMessage = 'La conexión está lenta. Reintentando...';
+          // Auto-reintentar una vez en caso de timeout
+          Future.delayed(Duration(seconds: 1), () {
+            if (mounted) _cargarEventos();
+          });
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(resultado['message'] ?? 'Error al cargar eventos'),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Reintentar',
+              textColor: Colors.white,
+              onPressed: () => _cargarEventos(),
+            ),
           ),
         );
       }
@@ -457,15 +513,91 @@ class _EventosScreenState extends State<EventosScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE91E63)),
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Cargando eventos...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
                   : eventos.isEmpty
-                      ? const Center(
-                          child: Text(
-                            'No hay eventos disponibles',
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.event_busy,
+                                  size: 64,
+                                  color: Colors.grey[400],
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                '¡No hay eventos disponibles!',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Sé el primero en crear un evento\npara la comunidad PetMatch',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[500],
+                                  height: 1.4,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton.icon(
+                                onPressed: openAddEventDialog,
+                                icon: const Icon(Icons.add, color: Colors.white),
+                                label: const Text(
+                                  'Crear Primer Evento',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFE91E63),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
+                                  elevation: 3,
+                                ),
+                              ),
+                            ],
                           ),
                         )
-                  : ListView.builder(
+                  : RefreshIndicator(
+                      onRefresh: _cargarEventos,
+                      color: const Color(0xFFE91E63),
+                      child: ListView.builder(
                       padding: const EdgeInsets.only(top: 24, bottom: 80),
                       itemCount: eventos.length,
                       itemBuilder: (context, index) {
@@ -609,17 +741,18 @@ class _EventosScreenState extends State<EventosScreen> {
                         );
                       },
                     ),
+                  ),
             ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: eventos.isNotEmpty ? FloatingActionButton(
         backgroundColor: const Color(0xFF7A45D1),
         foregroundColor: Colors.white,
         onPressed: openAddEventDialog,
         child: const Icon(Icons.add, size: 32),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      ) : null,
+      floatingActionButtonLocation: eventos.isNotEmpty ? FloatingActionButtonLocation.endFloat : null,
       // Barra de navegación inferior
       bottomNavigationBar: LayoutBuilder(
         builder: (context, constraints) {
@@ -689,7 +822,7 @@ class _EventosScreenState extends State<EventosScreen> {
                   if (index == 0) {
                     Navigator.pushNamedAndRemoveUntil(context, '/matches', (route) => false);
                   } else if (index == 1) {
-                    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
                   } else if (index == 2) {
                     // Ya estamos en eventos
                   } else if (index == 3) {

@@ -4,10 +4,55 @@ import 'menssages_screen.dart';
 import 'home_screen.dart';
 import 'eventos_screen.dart';
 import 'perfil_usuario_screen.dart';
+import 'perfil_screen.dart';
+import '../services/match_service.dart';
 
 // Clase principal para la pantalla de Matches
-class MatchesScreen extends StatelessWidget {
+class MatchesScreen extends StatefulWidget {
   const MatchesScreen({super.key});
+
+  @override
+  State<MatchesScreen> createState() => _MatchesScreenState();
+}
+
+class _MatchesScreenState extends State<MatchesScreen> {
+  List<Map<String, dynamic>> matches = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarMatches();
+  }
+
+  // Cargar matches desde la base de datos
+  Future<void> _cargarMatches() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final resultado = await MatchService.obtenerMatches();
+    
+    if (mounted) {
+      if (resultado['success']) {
+        setState(() {
+          matches = List<Map<String, dynamic>>.from(resultado['matches'] ?? []);
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          matches = [];
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(resultado['message'] ?? 'Error al cargar matches'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,23 +61,7 @@ class MatchesScreen extends StatelessWidget {
     final isSmall = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 1024;
     
-    final List<Map<String, String>> matches = [
-      {
-        'nombre': 'Luna',
-        'imagen':
-            'https://images.pexels.com/photos/4587995/pexels-photo-4587995.jpeg'
-      },
-      {
-        'nombre': 'Max',
-        'imagen':
-            'https://images.pexels.com/photos/4588000/pexels-photo-4588000.jpeg'
-      },
-      {
-        'nombre': 'Chispa',
-        'imagen':
-            'https://images.pexels.com/photos/4587996/pexels-photo-4587996.jpeg'
-      },
-    ];
+    final List<Map<String, dynamic>> matchesEjemplo = [];
 
     return Scaffold(
       backgroundColor: const Color(0xFFEDEDED), // Fondo gris claro de la pantalla
@@ -90,7 +119,7 @@ class MatchesScreen extends StatelessWidget {
                       itemBuilder: (context, index) {
                         // Construcción de cada celda en el GridView
                         final match = matches[index];
-                        return _matchCard(context, match['nombre']!, match['imagen']!);
+                        return _matchCard(context, match);
                         // Llama a la función _matchCard para construir cada tarjeta
                       },
                     ),
@@ -183,7 +212,7 @@ class MatchesScreen extends StatelessWidget {
                   } else if (index == 3) {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const PerfilUsuarioScreen()),
+                      MaterialPageRoute(builder: (context) => const PerfilScreen()),
                     );
                   }
                 },
@@ -196,14 +225,15 @@ class MatchesScreen extends StatelessWidget {
   }
 
   // Widget para la tarjeta que muestra el nombre y la imagen de cada mascota
-  Widget _matchCard(BuildContext context, String nombre, String imagen) {
+  Widget _matchCard(BuildContext context, Map<String, dynamic> match) {
     return GestureDetector(
       onTap: () {
-        // Aquí debes pasar el matchId real, por ahora usa un valor de ejemplo
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const MessagesScreen(matchId: 'match_id_de_ejemplo'),
+            builder: (context) => MessagesScreen(
+              matchId: match['match_id'].toString(),
+            ),
           ),
         );
       },
@@ -221,23 +251,45 @@ class MatchesScreen extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)), // Bordes redondeados en la parte superior
                 child: Image.network(
-                  imagen, // Carga la imagen desde la URL
+                  match['mascota_foto'] ?? 'https://via.placeholder.com/150', // Carga la imagen desde la URL
                   width: double.infinity, // Ancho completo de la tarjeta
                   fit: BoxFit.cover, // Ajuste de la imagen para cubrir el espacio
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[200],
+                      child: Icon(
+                        Icons.pets,
+                        size: 50,
+                        color: Colors.grey[400],
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
-            // Nombre de la mascota debajo de la imagen
+            // Información de la mascota debajo de la imagen
             Padding(
               padding: const EdgeInsets.all(8), // Padding alrededor del texto
               child: Column(
                 children: [
                   Text(
-                    nombre, // Nombre de la mascota
+                    match['mascota_nombre'] ?? 'Mascota', // Nombre de la mascota
                     style: const TextStyle(
                       fontWeight: FontWeight.w600, // Fuente en negrita
                       fontSize: 16, // Tamaño de la fuente
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${match['mascota_tipo'] ?? ''} • ${match['mascota_edad'] ?? ''}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   const Text(
