@@ -55,129 +55,183 @@ class _DatesScreenState extends State<DatesScreen> {
     final users = dates.map((d) => d['user'] as String).toSet().toList();
     final statuses = ['pendiente', 'aceptado', 'cancelado'];
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('Citas'),
-        backgroundColor: const Color(0xFF7A45D1),
+        backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF7A45D1), // Purple
-              Color(0xFFE040FB), // Pink
-              Color(0xFFF8BBD0), // Light Pink
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.purple.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    // Filter by user
-                    DropdownButton<String>(
-                      hint: const Text('Usuario'),
-                      value: selectedUser,
-                      items: users.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
-                      onChanged: (v) => setState(() => selectedUser = v),
-                    ),
-                    const SizedBox(width: 8),
-                    // Filter by status
-                    DropdownButton<String>(
-                      hint: const Text('Estado'),
-                      value: selectedStatus,
-                      items: statuses.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-                      onChanged: (v) => setState(() => selectedStatus = v),
-                    ),
-                    const SizedBox(width: 8),
-                    // Filter by date
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE040FB),
-                        foregroundColor: Colors.white,
-                      ),
-                      child: Text(selectedDate == null ? 'Fecha' : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'),
-                      onPressed: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2030),
-                        );
-                        if (picked != null) setState(() => selectedDate = picked);
-                      },
-                    ),
-                    if (selectedDate != null)
-                      IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () => setState(() => selectedDate = null),
-                      ),
-                  ],
-                ),
+      body: Stack(
+        children: [
+          // Animated gradient background
+          AnimatedContainer(
+            duration: const Duration(seconds: 2),
+            curve: Curves.easeInOut,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF7A45D1),
+                  Color(0xFFE040FB),
+                  Color(0xFFF8BBD0),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
-            Expanded(
-              child: filteredDates.isEmpty
-                  ? const Center(child: Text('No hay citas con estos filtros.', style: TextStyle(color: Color(0xFF7A45D1), fontWeight: FontWeight.bold)))
-                  : ListView.builder(
-                      itemCount: filteredDates.length,
-                      itemBuilder: (context, index) {
-                        final cita = filteredDates[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 6,
-                          color: cita['status'] == 'aceptado'
-                              ? const Color(0xFFE1BEE7)
-                              : cita['status'] == 'cancelado'
-                                  ? const Color(0xFFF8BBD0)
-                                  : Colors.white,
-                          child: ListTile(
-                            title: Text(
-                              '${cita['user']} - ${cita['date'].day}/${cita['date'].month}/${cita['date'].year}',
-                              style: const TextStyle(color: Color(0xFF7A45D1), fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text('Estado: ${cita['status']}', style: const TextStyle(color: Color(0xFFE040FB))),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (cita['status'] != 'aceptado')
-                                  IconButton(
-                                    icon: const Icon(Icons.check, color: Color(0xFF7A45D1)),
-                                    tooltip: 'Aprobar',
-                                    onPressed: () => updateStatus(cita['id'], 'aceptado'),
-                                  ),
-                                if (cita['status'] != 'cancelado')
-                                  IconButton(
-                                    icon: const Icon(Icons.cancel, color: Color(0xFFE040FB)),
-                                    tooltip: 'Cancelar',
-                                    onPressed: () => updateStatus(cita['id'], 'cancelado'),
-                                  ),
-                              ],
-                            ),
+          ),
+          Column(
+            children: [
+              const SizedBox(height: 80),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.purple.withOpacity(0.08),
+                            blurRadius: 12,
+                            offset: const Offset(0, 2),
                           ),
-                        );
-                      },
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          // Filter by user
+                          DropdownButton<String>(
+                            hint: const Text('Usuario'),
+                            value: selectedUser,
+                            items: users.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                            onChanged: (v) => setState(() => selectedUser = v),
+                          ),
+                          const SizedBox(width: 8),
+                          // Filter by status
+                          DropdownButton<String>(
+                            hint: const Text('Estado'),
+                            value: selectedStatus,
+                            items: statuses.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                            onChanged: (v) => setState(() => selectedStatus = v),
+                          ),
+                          const SizedBox(width: 8),
+                          // Filter by date
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFE040FB),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shadowColor: Colors.transparent,
+                            ),
+                            child: Text(selectedDate == null ? 'Fecha' : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'),
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime(2030),
+                              );
+                              if (picked != null) setState(() => selectedDate = picked);
+                            },
+                          ),
+                          if (selectedDate != null)
+                            IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () => setState(() => selectedDate = null),
+                            ),
+                        ],
+                      ),
                     ),
-            ),
-          ],
-        ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: filteredDates.isEmpty
+                    ? const Center(child: Text('No hay citas con estos filtros.', style: TextStyle(color: Color(0xFF7A45D1), fontWeight: FontWeight.bold)))
+                    : ListView.builder(
+                        itemCount: filteredDates.length,
+                        itemBuilder: (context, index) {
+                          final cita = filteredDates[index];
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeInOut,
+                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: cita['status'] == 'aceptado'
+                                          ? [Color(0xFFE1BEE7), Color(0xFF7A45D1).withOpacity(0.15)]
+                                          : cita['status'] == 'cancelado'
+                                              ? [Color(0xFFF8BBD0), Color(0xFFE040FB).withOpacity(0.15)]
+                                              : [Colors.white.withOpacity(0.85), Color(0xFFE040FB).withOpacity(0.08)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.2),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.purple.withOpacity(0.08),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                                    leading: CircleAvatar(
+                                      backgroundColor: cita['status'] == 'aceptado'
+                                          ? Color(0xFF7A45D1)
+                                          : cita['status'] == 'cancelado'
+                                              ? Color(0xFFE040FB)
+                                              : Color(0xFFF8BBD0),
+                                      child: Icon(Icons.event, color: Colors.white),
+                                    ),
+                                    title: Text(
+                                      '${cita['user']} - ${cita['date'].day}/${cita['date'].month}/${cita['date'].year}',
+                                      style: const TextStyle(color: Color(0xFF7A45D1), fontWeight: FontWeight.bold, fontSize: 18),
+                                    ),
+                                    subtitle: Text('Estado: ${cita['status']}', style: const TextStyle(color: Color(0xFFE040FB), fontWeight: FontWeight.w600)),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (cita['status'] != 'aceptado')
+                                          Tooltip(
+                                            message: 'Aprobar',
+                                            child: IconButton(
+                                              icon: const Icon(Icons.check, color: Color(0xFF7A45D1)),
+                                              onPressed: () => updateStatus(cita['id'], 'aceptado'),
+                                            ),
+                                          ),
+                                        if (cita['status'] != 'cancelado')
+                                          Tooltip(
+                                            message: 'Cancelar',
+                                            child: IconButton(
+                                              icon: const Icon(Icons.cancel, color: Color(0xFFE040FB)),
+                                              onPressed: () => updateStatus(cita['id'], 'cancelado'),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
