@@ -61,6 +61,7 @@ class PetMatchApp extends StatelessWidget {
         '/matches': (context) => const MatchesScreen(),
         '/perfil': (context) => const PerfilScreen(),
         '/eventos': (context) => const EventosScreen(),
+        '/dates': (context) => const DatesScreen(), // Nueva ruta para citas
         '/admin': (context) => const AdminPanelScreen(), // Panel administrativo
       },
     );

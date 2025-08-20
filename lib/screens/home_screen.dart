@@ -404,7 +404,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/dates');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const DatesScreen(),
+                                ),
+                              );
                             },
                           ),
                         ],
