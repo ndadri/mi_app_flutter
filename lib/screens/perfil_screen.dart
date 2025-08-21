@@ -71,7 +71,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                           ),
                         ),
                         onPressed: () => setState(() => showPetProfile = true),
-                        child: const Text('Perfil Mascota'),
+                        child: const Text('PERFIL MASCOTA'),
                       ),
                       const SizedBox(width: 16),
                       ElevatedButton(
@@ -83,7 +83,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                           ),
                         ),
                         onPressed: () => setState(() => showPetProfile = false),
-                        child: const Text('Perfil Usuario'),
+                        child: const Text('PERFIL USUARIO'),
                       ),
                     ],
                   ),
@@ -105,8 +105,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         ],
                       ),
                       child: showPetProfile
-                          ? const PerfilMascotaScreen()
-                          : const PerfilUsuarioScreen(),
+                          ? PerfilMascotaScreen()
+                          : PerfilUsuarioScreen(),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -183,13 +183,13 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 ],
                 onTap: (index) {
                   if (index == 0) {
-                    Navigator.pushNamed(context, '/matches');
+                    Navigator.pushReplacementNamed(context, '/matches');
                   } else if (index == 1) {
-                    Navigator.pushReplacementNamed(context, '/');
+                    Navigator.pushReplacementNamed(context, '/home');
                   } else if (index == 2) {
-                    Navigator.pushNamed(context, '/eventos');
+                    Navigator.pushReplacementNamed(context, '/eventos');
                   } else if (index == 3) {
-                    Navigator.pushNamed(context, '/perfil');
+                    // Ya estamos en perfil
                   }
                 },
               ),

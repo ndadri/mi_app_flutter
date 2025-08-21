@@ -5,7 +5,7 @@ import 'dart:io';
 class AutoLoginService {
   // Lista de IPs para probar automáticamente
   static const List<String> ipsToTry = [
-    'http://192.168.1.24:3002',
+    'http://192.168.1.24:3004',
     'http://192.168.56.1:3002',
     'http://192.168.11.1:3002',
     'http://192.168.52.1:3002',
@@ -33,7 +33,7 @@ class AutoLoginService {
             'Accept': 'application/json',
             'User-Agent': 'PetMatch Mobile App',
           },
-        ).timeout(Duration(seconds: 3));
+        ).timeout(const Duration(seconds: 3));
         
         if (response.statusCode == 200) {
           _workingIP = ip;
@@ -89,7 +89,7 @@ class AutoLoginService {
           'username': email.trim(),
           'password': password,
         }),
-      ).timeout(Duration(seconds: 15));
+      ).timeout(const Duration(seconds: 15));
       
       print('📡 Respuesta del servidor: ${response.statusCode}');
       print('📄 Contenido: ${response.body}');

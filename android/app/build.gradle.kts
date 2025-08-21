@@ -11,7 +11,7 @@ plugins {
 android {
     namespace = "com.petmatch"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "26.3.11579264" // Usar la versión que está instalada
+    ndkVersion = "26.3.11579264" // Versión disponible
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

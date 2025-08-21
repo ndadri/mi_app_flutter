@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import '../services/session_manager.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -50,8 +51,18 @@ class _SplashScreenState extends State<SplashScreen>
   void _startSplash() async {
     // Reducir tiempo de splash para transición más rápida
     await Future.delayed(const Duration(milliseconds: 2500));
+    
     if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/login');
+      // Verificar si hay una sesión válida antes de redirigir
+      final hasValidSession = await SessionManager.hasValidSession();
+      
+      if (hasValidSession) {
+        print('✅ Sesión válida encontrada, navegando a home');
+        Navigator.of(context).pushReplacementNamed('/home');
+      } else {
+        print('❌ No hay sesión válida, navegando a login');
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
     }
   }
 
@@ -65,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -105,13 +116,13 @@ class _SplashScreenState extends State<SplashScreen>
                             BoxShadow(
                               color: Colors.black.withOpacity(0.3),
                               blurRadius: 25,
-                              offset: Offset(0, 15),
+                              offset: const Offset(0, 15),
                               spreadRadius: 5,
                             ),
                             BoxShadow(
                               color: Colors.pink.withOpacity(0.3),
                               blurRadius: 40,
-                              offset: Offset(0, 0),
+                              offset: const Offset(0, 0),
                               spreadRadius: 0,
                             ),
                           ],
@@ -144,7 +155,7 @@ class _SplashScreenState extends State<SplashScreen>
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.1),
                                     blurRadius: 10,
-                                    offset: Offset(0, 2),
+                                    offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
@@ -158,7 +169,7 @@ class _SplashScreenState extends State<SplashScreen>
                                     height: 216,
                                     errorBuilder: (context, error, stackTrace) {
                                       // Si hay error cargando la imagen, mostrar ícono por defecto
-                                      return Icon(
+                                      return const Icon(
                                         Icons.pets,
                                         size: 90,
                                         color: Color(0xFFE91E63),
@@ -214,7 +225,7 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                       
-                      SizedBox(height: 45),
+                      const SizedBox(height: 45),
                       
                       // App title con efecto de brillo
                       AnimatedBuilder(
@@ -244,7 +255,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 shadows: [
                                   Shadow(
                                     color: Colors.black.withOpacity(0.3),
-                                    offset: Offset(2, 2),
+                                    offset: const Offset(2, 2),
                                     blurRadius: 4,
                                   ),
                                 ],
@@ -254,7 +265,7 @@ class _SplashScreenState extends State<SplashScreen>
                         },
                       ),
                       
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       
                       // Subtitle
                       Text(
@@ -266,7 +277,7 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                       
-                      SizedBox(height: 50),
+                      const SizedBox(height: 50),
                       
                       // Loading indicator mejorado
                       AnimatedBuilder(
@@ -292,7 +303,7 @@ class _SplashScreenState extends State<SplashScreen>
                                   shape: BoxShape.circle,
                                   color: Colors.white.withOpacity(0.9),
                                 ),
-                                child: Icon(
+                                child: const Icon(
                                   Icons.pets,
                                   size: 16,
                                   color: Color(0xFFE91E63),
@@ -303,7 +314,7 @@ class _SplashScreenState extends State<SplashScreen>
                         },
                       ),
                       
-                      SizedBox(height: 25),
+                      const SizedBox(height: 25),
                       
                       AnimatedBuilder(
                         animation: _animationController,

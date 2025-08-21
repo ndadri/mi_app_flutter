@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MatchService {
-  static const String baseUrl = 'http://192.168.1.24:3002';
+  static const String baseUrl = 'http://192.168.1.24:3004';
 
   // Obtener ID de usuario
   static Future<String?> _getUserId() async {
@@ -46,7 +46,7 @@ class MatchService {
           'mascota_id': mascotaId,
           'is_like': isLike,
         }),
-      ).timeout(Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -75,25 +75,51 @@ class MatchService {
         };
       }
 
+      print('🔍 Buscando matches para usuario: $userId');
+      print('🌐 URL: $baseUrl/api/matches/matches/$userId');
+
       final response = await http.get(
         Uri.parse('$baseUrl/api/matches/matches/$userId'),
         headers: {
           'Content-Type': 'application/json',
         },
-      ).timeout(Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 8));
+
+      print('📡 Respuesta matches: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        final data = json.decode(response.body);
+        return data;
+      } else if (response.statusCode == 404) {
+        // Si no encuentra la ruta, devolver lista vacía en lugar de error
+        return {
+          'success': true,
+          'matches': [],
+          'message': 'No hay matches disponibles aún'
+        };
+      } else if (response.statusCode == 500) {
+        // Para error 500, devolver matches vacíos en lugar de fallar
+        return {
+          'success': true,
+          'matches': [],
+          'warning': 'Servicio de matches temporalmente no disponible'
+        };
       } else {
         return {
           'success': false,
-          'message': 'Error del servidor: ${response.statusCode}'
+          'message': 'Error del servidor: ${response.statusCode}',
+          'statusCode': response.statusCode
         };
       }
     } catch (e) {
+      print('❌ Error obteniendo matches: $e');
+      
+      // En caso de error de conexión, devolver matches vacíos
       return {
-        'success': false,
-        'message': 'Error de conexión: $e'
+        'success': true,
+        'matches': [],
+        'warning': 'Sin conexión. Verifica tu internet.',
+        'canRetry': true
       };
     }
   }
@@ -114,7 +140,7 @@ class MatchService {
         headers: {
           'Content-Type': 'application/json',
         },
-      ).timeout(Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
@@ -140,7 +166,7 @@ class MatchService {
         headers: {
           'Content-Type': 'application/json',
         },
-      ).timeout(Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return json.decode(response.body);

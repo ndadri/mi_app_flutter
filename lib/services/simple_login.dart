@@ -21,7 +21,7 @@ class SimpleLogin {
           'username': email.trim(), // Cambiado de 'email' a 'username'
           'password': password,
         }),
-      ).timeout(Duration(seconds: 15)); // Timeout más largo
+      ).timeout(const Duration(seconds: 15)); // Timeout más largo
 
       print('📡 Respuesta recibida: ${response.statusCode}');
       print('📄 Contenido: ${response.body}');
@@ -35,10 +35,35 @@ class SimpleLogin {
           'token': data['token'],
         };
       } else {
-        final errorData = jsonDecode(response.body);
+        // Manejo específico de códigos de error
+        String errorMessage;
+        switch (response.statusCode) {
+          case 401:
+            errorMessage = 'Credenciales incorrectas. Verifica tu email y contraseña.';
+            break;
+          case 403:
+            errorMessage = 'Cuenta bloqueada o sin permisos.';
+            break;
+          case 404:
+            errorMessage = 'Servicio de login no encontrado.';
+            break;
+          case 500:
+            errorMessage = 'Error temporal del servidor. Intenta nuevamente.';
+            break;
+          default:
+            try {
+              final errorData = jsonDecode(response.body);
+              errorMessage = errorData['message'] ?? 'Error de login: ${response.statusCode}';
+            } catch (e) {
+              errorMessage = 'Error de login: ${response.statusCode}';
+            }
+        }
+        
         return {
           'success': false,
-          'message': errorData['message'] ?? 'Error de login',
+          'message': errorMessage,
+          'statusCode': response.statusCode,
+          'canRetry': response.statusCode >= 500, // Permitir reintentos en errores de servidor
         };
       }
     } on SocketException catch (e) {
@@ -79,7 +104,7 @@ class SimpleLogin {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-      ).timeout(Duration(seconds: 5));
+      ).timeout(const Duration(seconds: 5));
       
       print('🧪 Test resultado: ${response.statusCode}');
       return response.statusCode == 200;

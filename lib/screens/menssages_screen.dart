@@ -28,7 +28,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   // Cargar los mensajes del match desde el backend
   void _loadMessages() async {
-    final response = await http.get(Uri.parse('http://192.168.1.24:3002/api/match/${widget.matchId}/messages'));
+    final response = await http.get(Uri.parse('http://192.168.1.24:3004/api/match/${widget.matchId}/messages'));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -45,7 +45,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   Future<void> _enviarReporte(String tipoReporte, String descripcion) async {
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.1.24:3002/api/reportes'),
+        Uri.parse('http://192.168.1.24:3004/api/reportes'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'usuario_reportador_id': 2, // Aquí deberías usar el ID del usuario actual
@@ -57,26 +57,26 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('✅ Reporte enviado correctamente'),
-            duration: const Duration(seconds: 1),
+            duration: Duration(seconds: 1),
             backgroundColor: Colors.green,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('❌ Error al enviar el reporte'),
-            duration: const Duration(seconds: 1),
+            duration: Duration(seconds: 1),
             backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('❌ Error de conexión'),
-          duration: const Duration(seconds: 1),
+          duration: Duration(seconds: 1),
           backgroundColor: Colors.red,
         ),
       );
@@ -87,12 +87,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
   void _mostrarOpcionesReporte() {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) {
         return Container(
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -106,7 +106,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               _buildOpcionReporte('fake_profile', 'Perfil falso', Icons.person_off),
               _buildOpcionReporte('inappropriate_content', 'Contenido inapropiado', Icons.warning),
               _buildOpcionReporte('offensive_language', 'Lenguaje ofensivo o insultos', Icons.record_voice_over),
@@ -115,7 +115,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
               _buildOpcionReporte('dangerous_behavior', 'Comportamiento peligroso', Icons.dangerous),
               _buildOpcionReporte('spam', 'Publicidad o spam', Icons.campaign),
               _buildOpcionReporte('identity_theft', 'Suplantación de identidad', Icons.face),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
@@ -138,8 +138,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
         _enviarReporte(tipo, 'Reporte de: $titulo\n\nDetalles del reporte enviado desde la aplicación.');
       },
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        margin: EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        margin: const EdgeInsets.symmetric(vertical: 4),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.grey[300]!),
@@ -147,11 +147,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
         child: Row(
           children: [
             Icon(icono, color: Colors.red[600], size: 20),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 titulo,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   color: Colors.black87,
                 ),
@@ -174,7 +174,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       };
 
       final response = await http.post(
-        Uri.parse('http://192.168.1.24:3002/api/match/${widget.matchId}/messages'),
+        Uri.parse('http://192.168.1.24:3004/api/match/${widget.matchId}/messages'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(message),
       );
@@ -198,7 +198,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         title: const Text("Mensajes"),
         actions: [
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert),
+            icon: const Icon(Icons.more_vert),
             onSelected: (String value) {
               if (value == 'report') {
                 _mostrarOpcionesReporte();
@@ -210,8 +210,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 child: Row(
                   children: [
                     Icon(Icons.report, color: Colors.red[600]),
-                    SizedBox(width: 8),
-                    Text('Reportar usuario'),
+                    const SizedBox(width: 8),
+                    const Text('Reportar usuario'),
                   ],
                 ),
               ),

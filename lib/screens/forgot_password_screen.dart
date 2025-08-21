@@ -31,7 +31,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.1.24:3002/api/forgot-password'),
+        Uri.parse('http://192.168.1.24:3004/api/forgot-password'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'email': _emailController.text.trim()}),
       );

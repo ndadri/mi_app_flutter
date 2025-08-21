@@ -1,10 +1,6 @@
 // Importación del paquete Flutter para la interfaz de usuario
 import 'package:flutter/material.dart';
 import 'menssages_screen.dart';
-import 'home_screen.dart';
-import 'eventos_screen.dart';
-import 'perfil_usuario_screen.dart';
-import 'perfil_screen.dart';
 import '../services/match_service.dart';
 
 // Clase principal para la pantalla de Matches
@@ -39,17 +35,37 @@ class _MatchesScreenState extends State<MatchesScreen> {
           matches = List<Map<String, dynamic>>.from(resultado['matches'] ?? []);
           isLoading = false;
         });
+        
+        // Mostrar advertencia si hay warning pero datos cargados
+        if (resultado['warning'] != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(resultado['warning']),
+              backgroundColor: Colors.blue,
+              duration: const Duration(milliseconds: 500),
+            ),
+          );
+        }
       } else {
         setState(() {
           matches = [];
           isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(resultado['message'] ?? 'Error al cargar matches'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        
+        // Solo mostrar error si no es un problema temporal
+        if (resultado['statusCode'] != 500) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(resultado['message'] ?? 'Error al cargar matches'),
+              backgroundColor: Colors.orange,
+              action: resultado['canRetry'] == true ? SnackBarAction(
+                label: 'Reintentar',
+                textColor: Colors.white,
+                onPressed: () => _cargarMatches(),
+              ) : null,
+            ),
+          );
+        }
       }
     }
   }
@@ -200,20 +216,11 @@ class _MatchesScreenState extends State<MatchesScreen> {
                   if (index == 0) {
                     // Ya estamos en Match, no navegar
                   } else if (index == 1) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const HomeScreen()),
-                    );
+                    Navigator.pushReplacementNamed(context, '/home');
                   } else if (index == 2) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const EventosScreen()),
-                    );
+                    Navigator.pushReplacementNamed(context, '/eventos');
                   } else if (index == 3) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const PerfilScreen()),
-                    );
+                    Navigator.pushReplacementNamed(context, '/perfil');
                   }
                 },
               ),

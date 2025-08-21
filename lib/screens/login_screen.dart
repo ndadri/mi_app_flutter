@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 import 'forgot_password_screen.dart';
 import 'home_screen.dart';
 import 'admin_panel_screen.dart';
 import '../services/enhanced_google_auth.dart';
 import '../services/auto_login_service.dart'; // Nuestro nuevo servicio automático
+import '../services/session_manager.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -57,6 +60,9 @@ class _LoginScreenState extends State<LoginScreen> {
           prefs.setString('user_token', result['token']),
         ]);
         
+        // Marcar sesión como activa usando SessionManager
+        await SessionManager.markAsLoggedIn();
+        
         // Si encontramos una IP que funciona, guardarla para futuros usos
         if (result['workingIP'] != null) {
           await prefs.setString('working_ip', result['workingIP']);
@@ -71,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
         
         // Mostrar mensaje de éxito brevemente
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('¡Login exitoso!'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 1),
@@ -118,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
       
       if (canConnect) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('✅ ¡Conexión exitosa! El servidor está accesible.'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 3),
@@ -144,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Login con Google - OPTIMIZADO
+  // Login con Google - CON SINCRONIZACIÓN BACKEND
   Future<void> _loginWithGoogle() async {
     setState(() {
       _isLoading = true;
@@ -152,19 +158,88 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      // Paso 1: Login con Google + Firebase
       final result = await EnhancedGoogleAuth.signInWithGoogle();
       
       if (result != null && result['success']) {
-        // Guardar información del usuario de Google de forma paralela y rápida
-        final prefs = await SharedPreferences.getInstance();
         final userData = result['user'];
         
-        await Future.wait([
-          prefs.setString('user_id_google', userData['uid']),
-          prefs.setString('user_email', userData['email']),
-          prefs.setString('user_name', userData['displayName']),
-          prefs.setString('login_type', 'google'),
-        ]);
+        // Paso 2: Sincronizar con el backend para obtener datos completos
+        print('🔄 Sincronizando con backend para obtener datos completos...');
+        
+        try {
+          // Usar el endpoint de social-login del backend
+          final response = await http.post(
+            Uri.parse('http://192.168.1.24:3004/api/auth/social-login'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'email': userData['email'],
+              'name': userData['displayName'],
+              'provider': 'google',
+              'photoURL': userData['photoURL'] ?? '',
+            }),
+          ).timeout(const Duration(seconds: 10));
+          
+          if (response.statusCode == 200) {
+            final backendData = jsonDecode(response.body);
+            print('✅ Sincronización exitosa con backend');
+            print('📄 Datos del backend: ${response.body}');
+            
+            // Guardar toda la información (Google + Backend)
+            final prefs = await SharedPreferences.getInstance();
+            final backendUser = backendData['user'];
+            
+            await Future.wait([
+              // Datos de Google/Firebase
+              prefs.setString('user_id_google', userData['uid']),
+              prefs.setString('user_email', userData['email']),
+              prefs.setString('user_name', userData['displayName']),
+              prefs.setString('login_type', 'google'),
+              prefs.setString('user_token', backendData['token']),
+              
+              // Datos completos del backend
+              prefs.setInt('user_id', backendUser['id']),
+              prefs.setString('profile_nombres', backendUser['nombres'] ?? ''),
+              prefs.setString('profile_apellidos', backendUser['apellidos'] ?? ''),
+              prefs.setString('profile_genero', backendUser['genero'] ?? ''),
+              prefs.setString('profile_ubicacion', backendUser['ubicacion'] ?? ''),
+              prefs.setString('profile_fecha_nacimiento', backendUser['fecha_nacimiento'] ?? ''),
+            ]);
+            
+            print('💾 Datos completos guardados en SharedPreferences');
+            
+          } else {
+            print('⚠️ Error en sincronización con backend: ${response.statusCode}');
+            print('📄 Respuesta: ${response.body}');
+            
+            // Continuar con solo los datos de Google
+            final prefs = await SharedPreferences.getInstance();
+            await Future.wait([
+              prefs.setString('user_id_google', userData['uid']),
+              prefs.setString('user_email', userData['email']),
+              prefs.setString('user_name', userData['displayName']),
+              prefs.setString('login_type', 'google'),
+            ]);
+          }
+          
+        } catch (e) {
+          print('⚠️ Error al sincronizar con backend: $e');
+          
+          // Continuar con solo los datos de Google
+          final prefs = await SharedPreferences.getInstance();
+          await Future.wait([
+            prefs.setString('user_id_google', userData['uid']),
+            prefs.setString('user_email', userData['email']),
+            prefs.setString('user_name', userData['displayName']),
+            prefs.setString('login_type', 'google'),
+          ]);
+        }
+        
+        // Marcar sesión como activa usando SessionManager
+        await SessionManager.markAsLoggedIn();
         
         setState(() {
           _isLoading = false;

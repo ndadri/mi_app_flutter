@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 
 class DatesScreen extends StatefulWidget {
   const DatesScreen({super.key});
@@ -168,10 +169,10 @@ class _DatesScreenState extends State<DatesScreen> {
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: cita['status'] == 'aceptado'
-                                          ? [Color(0xFFE1BEE7), Color(0xFF7A45D1).withOpacity(0.15)]
+                                          ? [const Color(0xFFE1BEE7), const Color(0xFF7A45D1).withOpacity(0.15)]
                                           : cita['status'] == 'cancelado'
-                                              ? [Color(0xFFF8BBD0), Color(0xFFE040FB).withOpacity(0.15)]
-                                              : [Colors.white.withOpacity(0.85), Color(0xFFE040FB).withOpacity(0.08)],
+                                              ? [const Color(0xFFF8BBD0), const Color(0xFFE040FB).withOpacity(0.15)]
+                                              : [Colors.white.withOpacity(0.85), const Color(0xFFE040FB).withOpacity(0.08)],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     ),
@@ -189,11 +190,11 @@ class _DatesScreenState extends State<DatesScreen> {
                                     contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                                     leading: CircleAvatar(
                                       backgroundColor: cita['status'] == 'aceptado'
-                                          ? Color(0xFF7A45D1)
+                                          ? const Color(0xFF7A45D1)
                                           : cita['status'] == 'cancelado'
-                                              ? Color(0xFFE040FB)
-                                              : Color(0xFFF8BBD0),
-                                      child: Icon(Icons.event, color: Colors.white),
+                                              ? const Color(0xFFE040FB)
+                                              : const Color(0xFFF8BBD0),
+                                      child: const Icon(Icons.event, color: Colors.white),
                                     ),
                                     title: Text(
                                       '${cita['user']} - ${cita['date'].day}/${cita['date'].month}/${cita['date'].year}',

@@ -51,7 +51,7 @@ class _VerificationCodeScreenState extends State<VerificationCodeScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.1.24:3002/api/verify-reset-code'),
+        Uri.parse('http://192.168.1.24:3004/api/verify-reset-code'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'email': widget.email,

@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
         SnackBar(
           content: Text(resultado['message']),
           backgroundColor: resultado['isMatch'] == true ? Colors.green : Colors.blue,
-          duration: Duration(seconds: 2),
+          duration: const Duration(milliseconds: 500),
         ),
       );
     } else {
@@ -57,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
         SnackBar(
           content: Text(resultado['message']),
           backgroundColor: Colors.red,
+          duration: const Duration(milliseconds: 500),
         ),
       );
     }
@@ -68,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.favorite, color: Colors.red, size: 30),
             SizedBox(width: 10),
@@ -81,9 +82,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               '🎉 Tu mascota hizo match con ${match['mascota_2']['nombre']}!',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               'Ahora pueden chatear en la sección de Matches',
               textAlign: TextAlign.center,
@@ -96,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: Text('Continuar'),
+            child: const Text('Continuar'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -104,9 +105,9 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pushNamed(context, '/matches');
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFE91E63),
+              backgroundColor: const Color(0xFFE91E63),
             ),
-            child: Text('Ver Matches', style: TextStyle(color: Colors.white)),
+            child: const Text('Ver Matches', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -489,13 +490,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
                 onTap: (index) {
                   if (index == 0) {
-                    Navigator.pushNamed(context, '/matches');
+                    Navigator.pushReplacementNamed(context, '/matches');
                   } else if (index == 1) {
                     // Inicio, no navega
                   } else if (index == 2) {
-                    Navigator.pushNamed(context, '/eventos');
+                    Navigator.pushReplacementNamed(context, '/eventos');
                   } else if (index == 3) {
-                    Navigator.pushNamed(context, '/perfil');
+                    Navigator.pushReplacementNamed(context, '/perfil');
                   }
                 },
               ),

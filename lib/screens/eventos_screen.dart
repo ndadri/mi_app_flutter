@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../services/evento_service.dart';
+import '../services/session_manager.dart';
 
 class EventosScreen extends StatefulWidget {
   const EventosScreen({super.key});
@@ -53,7 +54,7 @@ class _EventosScreenState extends State<EventosScreen> {
     try {
       // Reducido timeout a 5 segundos para carga más rápida
       final resultado = await EventoService.obtenerEventos()
-          .timeout(Duration(seconds: 5));
+          .timeout(const Duration(seconds: 5));
       
       if (mounted) {
         if (resultado['success']) {
@@ -69,26 +70,58 @@ class _EventosScreenState extends State<EventosScreen> {
               SnackBar(
                 content: Text('${eventos.length} eventos cargados'),
                 backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
+                duration: const Duration(seconds: 2),
               ),
             );
           }
         } else {
           setState(() {
-            eventos = [];
+            // Si hay datos en cache, mantenerlos
+            if (resultado['fromCache'] != true) {
+              eventos = [];
+            }
             isLoading = false;
           });
-          // No mostrar error si simplemente no hay eventos
-          if (resultado['message'] != null && !resultado['message'].toString().toLowerCase().contains('no hay eventos')) {
+          
+          // Verificar si debe hacer logout usando SessionManager
+          final shouldLogout = resultado['shouldLogout'] == true;
+          if (shouldLogout) {
+            await SessionManager.handleError(
+              context, 
+              resultado['statusCode'], 
+              resultado['message']
+            );
+            return; // No continuar con el manejo de UI si se hizo logout
+          }
+          
+          // Manejar diferentes tipos de error
+          String message = resultado['message'] ?? 'Error al cargar eventos';
+          Color backgroundColor = Colors.orange;
+          
+          // Si es un error de servidor pero tenemos cache, mostrar advertencia suave
+          if (resultado['warning'] != null) {
+            message = resultado['warning'];
+            backgroundColor = Colors.blue;
+          } else if (resultado['statusCode'] == 500) {
+            message = 'Error temporal del servidor. Los datos pueden estar desactualizados.';
+            backgroundColor = Colors.amber;
+          }
+          
+          // No mostrar error si simplemente no hay eventos o si tenemos datos de cache
+          bool showError = !message.toLowerCase().contains('no hay eventos') && 
+                           resultado['fromCache'] != true;
+          
+          if (showError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(resultado['message'] ?? 'Error al cargar eventos'),
-                backgroundColor: Colors.orange,
-                action: SnackBarAction(
+                content: Text(message),
+                backgroundColor: backgroundColor,
+                duration: Duration(seconds: resultado['canRetry'] == true ? 4 : 3),
+                action: resultado['canRetry'] == true ? SnackBarAction(
                   label: 'Reintentar',
                   textColor: Colors.white,
                   onPressed: () => _cargarEventos(),
-                ),
+                ) : null,
               ),
             );
           }
@@ -106,7 +139,7 @@ class _EventosScreenState extends State<EventosScreen> {
         if (e.toString().contains('TimeoutException')) {
           errorMessage = 'La conexión está lenta. Reintentando...';
           // Auto-reintentar una vez en caso de timeout
-          Future.delayed(Duration(seconds: 1), () {
+          Future.delayed(const Duration(seconds: 1), () {
             if (mounted) _cargarEventos();
           });
         }
@@ -698,7 +731,7 @@ class _EventosScreenState extends State<EventosScreen> {
                                                 color: Colors.grey[200],
                                                 image: evento['imagen'] != null
                                                     ? DecorationImage(
-                                                        image: NetworkImage('http://192.168.1.24:3002${evento['imagen']}'),
+                                                        image: NetworkImage('http://192.168.1.24:3004${evento['imagen']}'),
                                                         fit: BoxFit.cover,
                                                       )
                                                     : null,
@@ -820,13 +853,13 @@ class _EventosScreenState extends State<EventosScreen> {
                 ],
                 onTap: (index) {
                   if (index == 0) {
-                    Navigator.pushNamedAndRemoveUntil(context, '/matches', (route) => false);
+                    Navigator.pushReplacementNamed(context, '/matches');
                   } else if (index == 1) {
-                    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+                    Navigator.pushReplacementNamed(context, '/home');
                   } else if (index == 2) {
                     // Ya estamos en eventos
                   } else if (index == 3) {
-                    Navigator.pushNamedAndRemoveUntil(context, '/perfil', (route) => false);
+                    Navigator.pushReplacementNamed(context, '/perfil');
                   }
                 },
               ),

@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'session_manager.dart';
 
 class EventoService {
-  static const String baseUrl = 'http://192.168.1.24:3002';
+  static const String baseUrl = 'http://192.168.1.24:3004';
   
   // Cache de eventos para mejorar rendimiento
   static List<Map<String, dynamic>>? _eventosCache;
@@ -72,7 +73,7 @@ class EventoService {
         headers: {
           'Content-Type': 'application/json',
         },
-      ).timeout(Duration(seconds: 5)); // Timeout reducido para carga más rápida
+      ).timeout(const Duration(seconds: 5)); // Timeout reducido para carga más rápida
       
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -85,25 +86,74 @@ class EventoService {
         
         return data;
       } else {
+        // Manejo específico de códigos de error HTTP
+        String errorMessage;
+        switch (response.statusCode) {
+          case 401:
+            errorMessage = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
+            break;
+          case 403:
+            errorMessage = 'No tienes permisos para acceder a este recurso.';
+            break;
+          case 404:
+            errorMessage = 'Servicio no encontrado. Verifica tu conexión.';
+            break;
+          case 500:
+            errorMessage = 'Error temporal del servidor. Reintentando...';
+            break;
+          default:
+            errorMessage = 'Error del servidor: ${response.statusCode}';
+        }
+        
+        // Para errores 500 (servidor), devolver cache si está disponible
+        if (response.statusCode == 500 && _eventosCache != null) {
+          return {
+            'success': true,
+            'eventos': _eventosCache,
+            'fromCache': true,
+            'warning': 'Error del servidor. Mostrando datos guardados.'
+          };
+        }
+        
+        // NO hacer logout automático en errores de servidor
+        final shouldLogout = SessionManager.shouldLogoutOnError(response.statusCode, errorMessage);
+        
         return {
           'success': false,
-          'message': 'Error del servidor: ${response.statusCode}'
+          'message': errorMessage,
+          'statusCode': response.statusCode,
+          'shouldLogout': shouldLogout
         };
       }
     } catch (e) {
+      // Mensaje de error más específico según el tipo de excepción
+      String errorMessage;
+      if (e.toString().contains('TimeoutException')) {
+        errorMessage = 'Conexión lenta. Verifica tu internet.';
+      } else if (e.toString().contains('SocketException')) {
+        errorMessage = 'Sin conexión a internet. Verifica tu WiFi.';
+      } else if (e.toString().contains('HttpException')) {
+        errorMessage = 'Error de conexión con el servidor.';
+      } else {
+        errorMessage = 'Error de conexión: ${e.toString()}';
+      }
+      
       // Si hay error y tenemos cache, devolver cache con advertencia
       if (_eventosCache != null) {
         return {
           'success': true,
           'eventos': _eventosCache,
           'fromCache': true,
-          'warning': 'Mostrando datos guardados. Verifica tu conexión.'
+          'warning': 'Sin conexión. Mostrando datos guardados.',
+          'canRetry': true
         };
       }
       
       return {
         'success': false,
-        'message': 'Error de conexión: $e'
+        'message': errorMessage,
+        'canRetry': true,
+        'shouldLogout': false // Los errores de conexión NO deben causar logout
       };
     }
   }

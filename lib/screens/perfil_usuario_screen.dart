@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class PerfilUsuarioScreen extends StatefulWidget {
   const PerfilUsuarioScreen({super.key});
@@ -7,453 +9,257 @@ class PerfilUsuarioScreen extends StatefulWidget {
   State<PerfilUsuarioScreen> createState() => _PerfilUsuarioScreenState();
 }
 
-class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen> 
-    with AutomaticKeepAliveClientMixin {
-  // Datos del usuario - SIEMPRE CON VALORES PREDETERMINADOS
-  String nombres = 'Usuario';
-  String apellidos = 'Invitado';
-  String genero = 'No especificado';
-  String ubicacion = 'No especificada';
-  String fechaNacimiento = '01/01/1990';
-  String email = 'usuario@ejemplo.com';
+class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen> {
+  bool showRegisterCard = false;
+  File? pickedImageFile;
 
-  // Controla si se muestra el modal de edición
-  bool showDialogCard = false;
+  // Datos simulados del usuario registrado
+  String? nombre;
+  String? apellido;
+  String? genero;
+  String? ciudad;
+  String? fechaNacimiento;
 
-  // Controladores para los campos
-  final TextEditingController nombresCtrl = TextEditingController();
-  final TextEditingController apellidosCtrl = TextEditingController();
-  final TextEditingController generoCtrl = TextEditingController();
-  final TextEditingController ubicacionCtrl = TextEditingController();
+  final TextEditingController nombreCtrl = TextEditingController();
+  final TextEditingController apellidoCtrl = TextEditingController();
+  final TextEditingController ciudadCtrl = TextEditingController();
   final TextEditingController fechaNacimientoCtrl = TextEditingController();
 
-  @override
-  bool get wantKeepAlive => true;
+  // Opciones de género
+  final List<String> generoOpciones = [
+    'Hombre',
+    'Mujer',
+    'No Binario',
+    'Prefiero No Decirlo',
+  ];
+  String? generoSeleccionado;
 
-  @override
-  void initState() {
-    super.initState();
-    // GARANTIZAR que siempre hay datos visibles - SIN EXCEPCIONES
-    print('🚀 PERFIL INICIADO - Datos garantizados');
-    
-    // Intentar cargar datos reales de forma muy simple
-    _tryLoadRealData();
+  Future<void> pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        pickedImageFile = File(picked.path);
+      });
+    }
   }
 
-  // Método súper simple - SIN servicios
-  void _tryLoadRealData() async {
-    print('🔄 Cargando datos del perfil...');
-    // LOS DATOS YA ESTÁN LISTOS - NO HACER NADA MÁS
-    print('✅ PERFIL CARGADO: $nombres $apellidos');
-  }
-
-  @override
-  void dispose() {
-    nombresCtrl.dispose();
-    apellidosCtrl.dispose();
-    generoCtrl.dispose();
-    ubicacionCtrl.dispose();
-    fechaNacimientoCtrl.dispose();
-    super.dispose();
-  }
-
-  void openEditCard() {
+  void confirmCard() {
     setState(() {
-      showDialogCard = true;
-      nombresCtrl.text = nombres;
-      apellidosCtrl.text = apellidos;
-      generoCtrl.text = genero;
-      ubicacionCtrl.text = ubicacion;
-      fechaNacimientoCtrl.text = fechaNacimiento;
+      nombre = nombreCtrl.text;
+      apellido = apellidoCtrl.text;
+      genero = generoSeleccionado;
+      ciudad = ciudadCtrl.text;
+      fechaNacimiento = fechaNacimientoCtrl.text;
+      showRegisterCard = false;
     });
-  }
-
-  Future<void> confirmCard() async {
-    // Cerrar modal
-    setState(() {
-      showDialogCard = false;
-    });
-
-    // SIMULAR actualización - SIN servicios
-    print('📝 Simulando actualización de datos...');
-    await Future.delayed(Duration(milliseconds: 300)); // Simular red
-    
-    // SIEMPRE actualizar los datos localmente
-    setState(() {
-      nombres = nombresCtrl.text.trim();
-      apellidos = apellidosCtrl.text.trim();
-      genero = generoCtrl.text.trim();
-      ubicacion = ubicacionCtrl.text.trim();
-      fechaNacimiento = fechaNacimientoCtrl.text.trim();
-    });
-    
-    print('✅ Datos actualizados localmente');
-
-    // Mostrar mensaje de éxito
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('✅ Datos actualizados exitosamente'),
-        backgroundColor: Colors.green,
-      ),
+      const SnackBar(content: Text('Usuario registrado correctamente')),
     );
+  }
+
+  void editarPerfil() {
+    nombreCtrl.text = nombre ?? '';
+    apellidoCtrl.text = apellido ?? '';
+    generoSeleccionado = genero ?? generoOpciones.first;
+    ciudadCtrl.text = ciudad ?? '';
+    fechaNacimientoCtrl.text = fechaNacimiento ?? '';
+    setState(() {
+      showRegisterCard = true;
+    });
+  }
+
+  void cerrarSesion() {
+    // Aquí puedes limpiar datos de sesión si usas SharedPreferences
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
+  Future<void> _selectFechaNacimiento(BuildContext context) async {
+    DateTime initialDate = DateTime.now().subtract(const Duration(days: 6570)); // 18 años atrás
+    if (fechaNacimientoCtrl.text.isNotEmpty) {
+      try {
+        initialDate = DateTime.parse(fechaNacimientoCtrl.text);
+      } catch (_) {}
+    }
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      helpText: 'Selecciona tu fecha de nacimiento',
+      locale: const Locale('es'),
+    );
+    if (picked != null) {
+      setState(() {
+        fechaNacimientoCtrl.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      });
+    }
+  }
+
+  void mostrarRegistroSiNoHayDatos() {
+    if (nombre == null || nombre!.isEmpty) {
+      setState(() {
+        showRegisterCard = true;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Requerido por AutomaticKeepAliveClientMixin
-    
-    print('🔧 BUILD PERFIL - nombres: $nombres, apellidos: $apellidos');
-    
-    // SIEMPRE mostrar la UI principal - NUNCA loading ni error
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Definir breakpoints para responsividad
-        final screenWidth = constraints.maxWidth;
-        final screenHeight = constraints.maxHeight;
-        
-        return Stack(
-          children: [
-            // Contenido principal responsivo
-            SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: _getHorizontalPadding(screenWidth),
-                vertical: _getVerticalPadding(screenHeight),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (screenWidth >= 1200) 
-                    _buildLargeScreenLayout(screenWidth, screenHeight)
-                  else if (screenWidth >= 600)
-                    _buildMediumScreenLayout(screenWidth, screenHeight)
-                  else
-                    _buildSmallScreenLayout(screenWidth, screenHeight),
-                  
-                  SizedBox(height: _getSpacing(screenWidth)),
-                  
-                  // Botón de cerrar sesión responsivo
-                  _buildLogoutButton(screenWidth),
-                ],
-              ),
-            ),
-            
-            // Modal de edición responsivo
-            if (showDialogCard)
-              _buildEditModal(screenWidth, screenHeight),
-          ],
-        );
-      },
-    );
-  }
-
-  // Layout para pantallas grandes (tablets horizontales, desktop)
-  Widget _buildLargeScreenLayout(double screenWidth, double screenHeight) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Columna izquierda - Foto de perfil
-        Expanded(
-          flex: 2,
-          child: Column(
-            children: [
-              _buildProfileImage(screenWidth * 0.15), // Imagen más grande
-              SizedBox(height: _getSpacing(screenWidth)),
-              Text(
-                '$nombres $apellidos',
-                style: TextStyle(
-                  fontSize: _getTitleSize(screenWidth),
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'AntonSC',
-                  color: const Color(0xFF7A45D1),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-        
-        SizedBox(width: _getSpacing(screenWidth)),
-        
-        // Columna derecha - Información del perfil
-        Expanded(
-          flex: 3,
-          child: Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(_getBorderRadius(screenWidth)),
-            ),
-            elevation: 8,
-            color: const Color(0xFFF7ECFA),
-            child: Padding(
-              padding: EdgeInsets.all(_getCardPadding(screenWidth)),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'INFORMACIÓN DEL PERFIL',
-                    style: TextStyle(
-                      fontSize: _getSubtitleSize(screenWidth),
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'AntonSC',
-                      color: const Color(0xFF7A45D1),
-                    ),
-                  ),
-                  SizedBox(height: _getSpacing(screenWidth)),
-                  _profileField('Nombres', nombres, screenWidth),
-                  _profileField('Apellidos', apellidos, screenWidth),
-                  _profileField('Género', genero, screenWidth),
-                  _profileField('Ubicación', ubicacion, screenWidth),
-                  _profileField('Fecha de nacimiento', fechaNacimiento, screenWidth),
-                  SizedBox(height: _getSpacing(screenWidth)),
-                  _buildEditButton(screenWidth),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Layout para pantallas medianas (tablets verticales)
-  Widget _buildMediumScreenLayout(double screenWidth, double screenHeight) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: screenWidth * 0.8),
-        child: Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_getBorderRadius(screenWidth)),
-          ),
-          elevation: 8,
-          color: const Color(0xFFF7ECFA),
-          child: Padding(
-            padding: EdgeInsets.all(_getCardPadding(screenWidth)),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildProfileImage(screenWidth * 0.2),
-                SizedBox(height: _getSpacing(screenWidth)),
-                Text(
-                  '$nombres $apellidos',
-                  style: TextStyle(
-                    fontSize: _getTitleSize(screenWidth),
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'AntonSC',
-                    color: const Color(0xFF7A45D1),
-                  ),
-                ),
-                SizedBox(height: _getSpacing(screenWidth)),
-                _profileField('Nombres', nombres, screenWidth),
-                _profileField('Apellidos', apellidos, screenWidth),
-                _profileField('Género', genero, screenWidth),
-                _profileField('Ubicación', ubicacion, screenWidth),
-                _profileField('Fecha de nacimiento', fechaNacimiento, screenWidth),
-                SizedBox(height: _getSpacing(screenWidth)),
-                _buildEditButton(screenWidth),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Layout para pantallas pequeñas (móviles)
-  Widget _buildSmallScreenLayout(double screenWidth, double screenHeight) {
-    return Center(
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(_getBorderRadius(screenWidth)),
-        ),
-        elevation: 8,
-        margin: EdgeInsets.all(_getCardMargin(screenWidth)),
-        color: const Color(0xFFF7ECFA),
-        child: Padding(
-          padding: EdgeInsets.all(_getCardPadding(screenWidth)),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildProfileImage(screenWidth * 0.25),
-              SizedBox(height: _getSpacing(screenWidth)),
-              _profileField('Nombres', nombres, screenWidth),
-              _profileField('Apellidos', apellidos, screenWidth),
-              _profileField('Género', genero, screenWidth),
-              _profileField('Ubicación', ubicacion, screenWidth),
-              _profileField('Fecha de nacimiento', fechaNacimiento, screenWidth),
-              SizedBox(height: _getSpacing(screenWidth)),
-              _buildEditButton(screenWidth),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Componente de imagen de perfil responsivo
-  Widget _buildProfileImage(double size) {
-    return CircleAvatar(
-      radius: size / 2,
-      backgroundImage: const NetworkImage(
-        'https://randomuser.me/api/portraits/men/1.jpg',
-      ),
-    );
-  }
-
-  // Botón de editar responsivo
-  Widget _buildEditButton(double screenWidth) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF7A45D1),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_getBorderRadius(screenWidth) / 2),
-          ),
-          padding: EdgeInsets.symmetric(
-            horizontal: _getButtonPadding(screenWidth),
-            vertical: _getButtonPadding(screenWidth) * 0.75,
-          ),
-          textStyle: TextStyle(
-            fontFamily: 'AntonSC',
-            fontWeight: FontWeight.bold,
-            fontSize: _getButtonTextSize(screenWidth),
-          ),
-        ),
-        onPressed: openEditCard,
-        icon: Icon(Icons.edit, size: _getIconSize(screenWidth)),
-        label: const Text('EDITAR DATOS'),
-      ),
-    );
-  }
-
-  // Botón de cerrar sesión responsivo
-  Widget _buildLogoutButton(double screenWidth) {
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: screenWidth < 600 ? double.infinity : 300,
-      ),
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.redAccent,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_getBorderRadius(screenWidth) / 2),
-          ),
-          padding: EdgeInsets.symmetric(
-            horizontal: _getButtonPadding(screenWidth),
-            vertical: _getButtonPadding(screenWidth) * 0.75,
-          ),
-          textStyle: TextStyle(
-            fontFamily: 'AntonSC',
-            fontWeight: FontWeight.bold,
-            fontSize: _getButtonTextSize(screenWidth),
-          ),
-        ),
-        onPressed: () async {
-          // Mostrar diálogo de confirmación
-          final shouldLogout = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Cerrar Sesión'),
-              content: const Text('¿Estás seguro de que quieres cerrar sesión?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancelar'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  style: TextButton.styleFrom(foregroundColor: Colors.red),
-                  child: const Text('Cerrar Sesión'),
-                ),
-              ],
-            ),
-          );
-
-          if (shouldLogout == true) {
-            // SIMULAR cerrar sesión - SIN servicios
-            print('🚪 Cerrando sesión...');
-            
-            // Navegar a login directamente
-            if (mounted) {
-              Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-            }
-          }
-        },
-        icon: Icon(Icons.logout, size: _getIconSize(screenWidth)),
-        label: const Text('CERRAR SESIÓN'),
-      ),
-    );
-  }
-  // Modal de edición responsivo
-  Widget _buildEditModal(double screenWidth, double screenHeight) {
-    return Center(
-      child: Material(
-        type: MaterialType.transparency,
-        child: Center(
-          child: SingleChildScrollView(
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(_getBorderRadius(screenWidth)),
-              ),
-              elevation: 12,
-              margin: EdgeInsets.all(_getCardMargin(screenWidth)),
-              child: Container(
-                width: _getModalWidth(screenWidth),
-                padding: EdgeInsets.all(_getCardPadding(screenWidth)),
+    return Scaffold(
+      body: Stack(
+        children: [
+          if (!showRegisterCard && nombre == null)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Editar datos de usuario',
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF7A45D1).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        size: 60,
+                        color: Color(0xFF7A45D1),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    const Text(
+                      '¡NO HAY DATOS DE USUARIO REGISTRADOS!',
                       style: TextStyle(
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        fontSize: _getSubtitleSize(screenWidth),
-                        color: const Color(0xFF7A45D1),
-                        fontFamily: 'AntonSC',
+                        color: Color(0xFF333333),
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: _getSpacing(screenWidth)),
-                    _inputField('Nombres', nombresCtrl, screenWidth),
-                    _inputField('Apellidos', apellidosCtrl, screenWidth),
-                    _inputField('Género', generoCtrl, screenWidth),
-                    _inputField('Ubicación', ubicacionCtrl, screenWidth),
-                    _inputField('Fecha de nacimiento', fechaNacimientoCtrl, screenWidth),
-                    SizedBox(height: _getSpacing(screenWidth)),
+                    const SizedBox(height: 16),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        'REGISTRA TU INFORMACIÓN PERSONAL\nPARA QUE OTROS USUARIOS PUEDAN VER TU PERFIL',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF666666),
+                          height: 1.4,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    ElevatedButton(
+                      onPressed: mostrarRegistroSiNoHayDatos,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF7A45D1),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        '+ REGISTRAR MI USUARIO',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+          if (!showRegisterCard && nombre != null)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF7A45D1).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(60),
+                      ),
+                      child: pickedImageFile != null
+                          ? ClipOval(
+                              child: Image.file(
+                                pickedImageFile!,
+                                fit: BoxFit.cover,
+                                width: 120,
+                                height: 120,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.person,
+                              size: 60,
+                              color: Color(0xFF7A45D1),
+                            ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      '${nombre ?? ''} ${apellido ?? ''}',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF333333),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Género: ${genero ?? ''}',
+                      style: const TextStyle(fontSize: 16, color: Color(0xFF666666)),
+                    ),
+                    Text(
+                      'Ciudad:  ${ciudad ?? ''}',
+                      style: const TextStyle(fontSize: 16, color: Color(0xFF666666)),
+                    ),
+                    Text(
+                      'Fecha de nacimiento: ${fechaNacimiento ?? ''}',
+                      style: const TextStyle(fontSize: 16, color: Color(0xFF666666)),
+                    ),
+                    const SizedBox(height: 32),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: TextButton(
-                            onPressed: () => setState(() => showDialogCard = false),
-                            child: Text(
-                              'Cancelar',
-                              style: TextStyle(
-                                fontSize: _getButtonTextSize(screenWidth),
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: _getSpacing(screenWidth)),
-                        Expanded(
                           child: ElevatedButton(
+                            onPressed: editarPerfil,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF7A45D1),
                               foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(_getBorderRadius(screenWidth) / 2),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                vertical: _getButtonPadding(screenWidth) * 0.75,
-                              ),
-                              textStyle: TextStyle(
-                                fontSize: _getButtonTextSize(screenWidth),
-                                fontWeight: FontWeight.bold,
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            onPressed: confirmCard,
-                            child: const Text('Confirmar'),
+                            child: const Text('Editar Perfil'),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: cerrarSesion,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF7A45D1),
+                              side: const BorderSide(color: Color(0xFF7A45D1)),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('Cerrar Sesión'),
                           ),
                         ),
                       ],
@@ -462,211 +268,164 @@ class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen>
                 ),
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Función para campos de perfil responsivos
-  Widget _profileField(String label, String value, double screenWidth) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: _getFieldSpacing(screenWidth)),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: screenWidth < 600 ? 2 : 3,
-            child: Text(
-              label.toUpperCase(),
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                color: Colors.black87,
-                fontSize: _getFieldLabelSize(screenWidth),
-                fontFamily: 'AntonSC',
+          if (showRegisterCard)
+            Center(
+              child: Material(
+                type: MaterialType.transparency,
+                child: SingleChildScrollView(
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    elevation: 12,
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                    child: Container(
+                      width: 350,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: pickImage,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.grey[200],
+                                  ),
+                                  child: ClipOval(
+                                    child: pickedImageFile != null
+                                        ? Image.file(
+                                            pickedImageFile!,
+                                            fit: BoxFit.cover,
+                                            width: 120,
+                                            height: 120,
+                                          )
+                                        : Image.network(
+                                            'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+                                            fit: BoxFit.cover,
+                                            width: 120,
+                                            height: 120,
+                                          ),
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: 8,
+                                  right: 8,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.12),
+                                          blurRadius: 6,
+                                        ),
+                                      ],
+                                    ),
+                                    padding: const EdgeInsets.all(6),
+                                    child: const Icon(Icons.camera_alt, color: Color(0xFF7A45D1), size: 26),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          _inputField('Nombre', nombreCtrl),
+                          _inputField('Apellido', apellidoCtrl),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: DropdownButtonFormField<String>(
+                              value: generoSeleccionado,
+                              decoration: InputDecoration(
+                                labelText: 'Género',
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              ),
+                              items: generoOpciones
+                                  .map((opcion) => DropdownMenuItem(
+                                        value: opcion,
+                                        child: Text(opcion),
+                                      ))
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  generoSeleccionado = value;
+                                });
+                              },
+                            ),
+                          ),
+                          _inputField('Ciudad', ciudadCtrl),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: GestureDetector(
+                              onTap: () => _selectFechaNacimiento(context),
+                              child: AbsorbPointer(
+                                child: TextFormField(
+                                  controller: fechaNacimientoCtrl,
+                                  decoration: InputDecoration(
+                                    labelText: 'Fecha de nacimiento',
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    suffixIcon: const Icon(Icons.calendar_today),
+                                  ),
+                                  keyboardType: TextInputType.datetime,
+                                  readOnly: true,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              TextButton(
+                                onPressed: () => setState(() => showRegisterCard = false),
+                                child: const Text('Cancelar'),
+                              ),
+                              Flexible(
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF7A45D1),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  onPressed: confirmCard,
+                                  child: const Text('Confirmar', overflow: TextOverflow.ellipsis),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-          SizedBox(width: _getSpacing(screenWidth) / 2),
-          Expanded(
-            flex: screenWidth < 600 ? 3 : 4,
-            child: Text(
-              value,
-              style: TextStyle(
-                color: Colors.black54,
-                fontSize: _getFieldValueSize(screenWidth),
-                fontFamily: 'AntonSC',
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
-
-  // Función para campos de entrada responsivos
-  Widget _inputField(String label, TextEditingController controller, double screenWidth) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: _getFieldSpacing(screenWidth)),
-      child: TextField(
-        controller: controller,
-        style: TextStyle(fontSize: _getInputTextSize(screenWidth)),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(fontSize: _getInputLabelSize(screenWidth)),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(_getBorderRadius(screenWidth) / 3),
-          ),
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: _getInputPadding(screenWidth),
-            vertical: _getInputPadding(screenWidth) * 0.75,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Funciones para calcular dimensiones responsivas
-  double _getHorizontalPadding(double screenWidth) {
-    if (screenWidth < 600) return 16.0;
-    if (screenWidth < 1200) return 32.0;
-    return 64.0;
-  }
-
-  double _getVerticalPadding(double screenHeight) {
-    if (screenHeight < 600) return 16.0;
-    if (screenHeight < 800) return 24.0;
-    return 32.0;
-  }
-
-  double _getCardMargin(double screenWidth) {
-    if (screenWidth < 600) return 16.0;
-    if (screenWidth < 1200) return 24.0;
-    return 32.0;
-  }
-
-  double _getCardPadding(double screenWidth) {
-    if (screenWidth < 600) return 20.0;
-    if (screenWidth < 1200) return 28.0;
-    return 36.0;
-  }
-
-  double _getBorderRadius(double screenWidth) {
-    if (screenWidth < 600) return 16.0;
-    if (screenWidth < 1200) return 20.0;
-    return 24.0;
-  }
-
-  double _getSpacing(double screenWidth) {
-    if (screenWidth < 600) return 16.0;
-    if (screenWidth < 1200) return 20.0;
-    return 24.0;
-  }
-
-  double _getFieldSpacing(double screenWidth) {
-    if (screenWidth < 600) return 8.0;
-    if (screenWidth < 1200) return 10.0;
-    return 12.0;
-  }
-
-  double _getTitleSize(double screenWidth) {
-    if (screenWidth < 600) return 20.0;
-    if (screenWidth < 1200) return 24.0;
-    return 28.0;
-  }
-
-  double _getSubtitleSize(double screenWidth) {
-    if (screenWidth < 600) return 16.0;
-    if (screenWidth < 1200) return 18.0;
-    return 20.0;
-  }
-
-  double _getFieldLabelSize(double screenWidth) {
-    if (screenWidth < 600) return 14.0;
-    if (screenWidth < 1200) return 15.0;
-    return 16.0;
-  }
-
-  double _getFieldValueSize(double screenWidth) {
-    if (screenWidth < 600) return 14.0;
-    if (screenWidth < 1200) return 15.0;
-    return 16.0;
-  }
-
-  double _getButtonTextSize(double screenWidth) {
-    if (screenWidth < 600) return 14.0;
-    if (screenWidth < 1200) return 15.0;
-    return 16.0;
-  }
-
-  double _getInputTextSize(double screenWidth) {
-    if (screenWidth < 600) return 14.0;
-    if (screenWidth < 1200) return 15.0;
-    return 16.0;
-  }
-
-  double _getInputLabelSize(double screenWidth) {
-    if (screenWidth < 600) return 12.0;
-    if (screenWidth < 1200) return 13.0;
-    return 14.0;
-  }
-
-  double _getButtonPadding(double screenWidth) {
-    if (screenWidth < 600) return 16.0;
-    if (screenWidth < 1200) return 20.0;
-    return 24.0;
-  }
-
-  double _getInputPadding(double screenWidth) {
-    if (screenWidth < 600) return 12.0;
-    if (screenWidth < 1200) return 14.0;
-    return 16.0;
-  }
-
-  double _getIconSize(double screenWidth) {
-    if (screenWidth < 600) return 18.0;
-    if (screenWidth < 1200) return 20.0;
-    return 22.0;
-  }
-
-  double _getModalWidth(double screenWidth) {
-    if (screenWidth < 600) return screenWidth * 0.9;
-    if (screenWidth < 1200) return screenWidth * 0.6;
-    return screenWidth * 0.4;
-  }
-
 }
 
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const CustomAppBar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        double screenWidth = MediaQuery.of(context).size.width;
-        
-        return AppBar(
-          title: Text(
-            'PERFIL',
-            style: TextStyle(
-              fontFamily: 'AntonSC',
-              fontSize: screenWidth < 600 ? 18.0 : 20.0,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              letterSpacing: 1.5,
-            ),
-          ),
-          centerTitle: true,
-          backgroundColor: const Color(0xFF7A45D1),
-          elevation: 4,
-          toolbarHeight: screenWidth < 600 ? 56.0 : 64.0,
-        );
-      },
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(56);
+// Campo de entrada reutilizable
+Widget _inputField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+    ),
+  );
 }

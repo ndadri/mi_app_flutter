@@ -81,6 +81,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    // Validación de contraseña
+    final passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$');
+    if (!passwordRegex.hasMatch(contrasena)) {
+      setState(() {
+        _isRegistering = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La contraseña debe tener al menos 6 caracteres, una mayúscula, una minúscula y un número.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
     try {
       print('📍 Obteniendo ubicación...');
       // Obtener coordenadas si es posible
@@ -142,11 +157,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } else {
         print('❌ Error en el registro');
         final responseData = jsonDecode(response.body);
+        String errorMsg = responseData['mensaje'] ?? 'Error al registrar el usuario';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(responseData['mensaje'] ?? 'Error al registrar el usuario'),
+            content: Text(errorMsg),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 1),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
