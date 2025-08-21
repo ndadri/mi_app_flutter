@@ -1,6 +1,7 @@
 // Importación del paquete de Flutter
 import 'package:flutter/material.dart';
 import '../services/match_service.dart';
+import 'dates_screen.dart';
 
 // Clase principal de la pantalla HomeScreen, que se mostrará al iniciar la app
 class HomeScreen extends StatefulWidget {
@@ -405,7 +406,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/dates');
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const DatesScreen(),
+                                ),
+                              );
                             },
                           ),
                         ],

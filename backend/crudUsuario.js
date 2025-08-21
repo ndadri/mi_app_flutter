@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const { Pool } = require('pg');
@@ -9,40 +8,40 @@ const pool = new Pool({
 });
 
 // Helper: validate email
-function isValidEmail(email) {
-    return /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email);
+function isValidEmail(correo) {
+    return /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(correo);
 }
 
 // CREATE usuario
 router.post('/', async (req, res) => {
     try {
-        let { nombre, edad, ubicacion, fecha_nacimiento, email, contraseña, state } = req.body;
+    let { nombres, edad, ubicacion, fecha_nacimiento, correo, contraseña, verificado } = req.body;
 
         // Basic validation
-        if (!nombre || !edad || !ubicacion || !fecha_nacimiento || !email || !contraseña || typeof state === 'undefined') {
+        if (!nombres || !edad || !ubicacion || !fecha_nacimiento || !correo || !contraseña || typeof verificado === 'undefined') {
             return res.status(400).json({ mensaje: 'Todos los campos son requeridos.' });
         }
-        if (!isValidEmail(email)) {
-            return res.status(400).json({ mensaje: 'Email no válido.' });
+        if (!isValidEmail(correo)) {
+            return res.status(400).json({ mensaje: 'Correo no válido.' });
         }
         if (contraseña.length < 6) {
             return res.status(400).json({ mensaje: 'La contraseña debe tener al menos 6 caracteres.' });
         }
-        // Validate state as boolean or string
-        let stateBool;
-        if (typeof state === 'boolean') {
-            stateBool = state;
-        } else if (typeof state === 'string') {
-            state = state.trim().toLowerCase();
-            if (state === 'verificado') stateBool = true;
-            else if (state === 'no') stateBool = false;
-            else return res.status(400).json({ mensaje: "El estado debe ser 'verificado' o 'no'." });
+        // Validate verificado as boolean or string
+        let verificadoBool;
+        if (typeof verificado === 'boolean') {
+            verificadoBool = verificado;
+        } else if (typeof verificado === 'string') {
+            verificado = verificado.trim().toLowerCase();
+            if (verificado === 'verificado') verificadoBool = true;
+            else if (verificado === 'no') verificadoBool = false;
+            else return res.status(400).json({ mensaje: "El campo verificado debe ser 'verificado' o 'no'." });
         } else {
-            return res.status(400).json({ mensaje: "El estado debe ser 'verificado' o 'no'." });
+            return res.status(400).json({ mensaje: "El campo verificado debe ser 'verificado' o 'no'." });
         }
 
         // Check for duplicate email
-        const exists = await pool.query('SELECT id FROM usuarios WHERE email = $1', [email]);
+        const exists = await pool.query('SELECT id FROM usuarios WHERE correo = $1', [correo]);
         if (exists.rows.length > 0) {
             return res.status(409).json({ mensaje: 'El email ya está registrado.' });
         }
@@ -52,12 +51,12 @@ router.post('/', async (req, res) => {
 
         // Insert user
         const result = await pool.query(
-            `INSERT INTO usuarios (nombre, edad, ubicacion, fecha_nacimiento, email, contraseña, state)
+            `INSERT INTO usuarios (nombres, edad, ubicacion, fecha_nacimiento, correo, contraseña, verificado)
              VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-            [nombre, edad, ubicacion, fecha_nacimiento, email, hashedPassword, stateBool]
+            [nombres, edad, ubicacion, fecha_nacimiento, correo, hashedPassword, verificadoBool]
         );
         let usuario = result.rows[0];
-        usuario.state = usuario.state ? 'verificado' : 'no';
+        usuario.verificado = usuario.verificado ? 'verificado' : 'no';
         delete usuario.contraseña;
         res.status(201).json(usuario);
     } catch (error) {
@@ -65,12 +64,35 @@ router.post('/', async (req, res) => {
     }
 });
 
-// READ all usuarios
+// Endpoint para obtener el total de usuarios registrados
+router.get('/total', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT COUNT(*) AS total FROM usuarios');
+        const total = parseInt(result.rows[0].total, 10);
+        res.json({ total });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Endpoint para obtener el total de usuarios activos (verificado=true)
+router.get('/activos', async (req, res) => {
+    try {
+        const result = await pool.query("SELECT COUNT(*) AS total FROM usuarios WHERE verificado = true");
+        const total = parseInt(result.rows[0].total, 10);
+        res.json({ total });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ...endpoint de usuarios online eliminado...
+
 router.get('/', async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, nombre, edad, ubicacion, fecha_nacimiento, email, state FROM usuarios');
-        // Convert state to string
-        const usuarios = result.rows.map(u => ({ ...u, state: u.state ? 'verificado' : 'no' }));
+        const result = await pool.query('SELECT id, nombres, edad, ubicacion, fecha_nacimiento, correo, verificado FROM usuarios');
+        // Convert verificado to string
+        const usuarios = result.rows.map(u => ({ ...u, verificado: u.verificado ? 'verificado' : 'no' }));
         res.json(usuarios);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -81,12 +103,16 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await pool.query('SELECT id, nombre, edad, ubicacion, fecha_nacimiento, email, state FROM usuarios WHERE id = $1', [id]);
+        // Validar que id sea un número
+        if (isNaN(parseInt(id))) {
+            return res.status(400).json({ error: 'ID inválido, debe ser un número.' });
+        }
+        const result = await pool.query('SELECT id, nombres, edad, ubicacion, fecha_nacimiento, correo, verificado FROM usuarios WHERE id = $1', [id]);
         if (result.rows.length === 0) {
             return res.status(404).json({ mensaje: 'Usuario no encontrado' });
         }
         let usuario = result.rows[0];
-        usuario.state = usuario.state ? 'verificado' : 'no';
+        usuario.verificado = usuario.verificado ? 'verificado' : 'no';
         res.json(usuario);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -97,26 +123,26 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        let { nombre, edad, ubicacion, fecha_nacimiento, email, contraseña, state } = req.body;
+    let { nombres, edad, ubicacion, fecha_nacimiento, correo, contraseña, verificado } = req.body;
 
         // Basic validation
-        if (!nombre || !edad || !ubicacion || !fecha_nacimiento || !email || typeof state === 'undefined') {
+        if (!nombres || !edad || !ubicacion || !fecha_nacimiento || !correo || typeof verificado === 'undefined') {
             return res.status(400).json({ mensaje: 'Todos los campos son requeridos.' });
         }
-        if (!isValidEmail(email)) {
-            return res.status(400).json({ mensaje: 'Email no válido.' });
+        if (!isValidEmail(correo)) {
+            return res.status(400).json({ mensaje: 'Correo no válido.' });
         }
-        // Validate state as boolean or string
-        let stateBool;
-        if (typeof state === 'boolean') {
-            stateBool = state;
-        } else if (typeof state === 'string') {
-            state = state.trim().toLowerCase();
-            if (state === 'verificado') stateBool = true;
-            else if (state === 'no') stateBool = false;
-            else return res.status(400).json({ mensaje: "El estado debe ser 'verificado' o 'no'." });
+        // Validate verificado as boolean or string
+        let verificadoBool;
+        if (typeof verificado === 'boolean') {
+            verificadoBool = verificado;
+        } else if (typeof verificado === 'string') {
+            verificado = verificado.trim().toLowerCase();
+            if (verificado === 'verificado') verificadoBool = true;
+            else if (verificado === 'no') verificadoBool = false;
+            else return res.status(400).json({ mensaje: "El campo verificado debe ser 'verificado' o 'no'." });
         } else {
-            return res.status(400).json({ mensaje: "El estado debe ser 'verificado' o 'no'." });
+            return res.status(400).json({ mensaje: "El campo verificado debe ser 'verificado' o 'no'." });
         }
 
         // Hash password if provided
@@ -126,14 +152,14 @@ router.put('/:id', async (req, res) => {
         }
 
         const result = await pool.query(
-            `UPDATE usuarios SET nombre=$1, edad=$2, ubicacion=$3, fecha_nacimiento=$4, email=$5, contraseña=$6, state=$7 WHERE id=$8 RETURNING *`,
-            [nombre, edad, ubicacion, fecha_nacimiento, email, hashedPassword, stateBool, id]
+            `UPDATE usuarios SET nombres=$1, edad=$2, ubicacion=$3, fecha_nacimiento=$4, correo=$5, contraseña=$6, verificado=$7 WHERE id=$8 RETURNING *`,
+            [nombres, edad, ubicacion, fecha_nacimiento, correo, hashedPassword, verificadoBool, id]
         );
         if (result.rows.length === 0) {
             return res.status(404).json({ mensaje: 'Usuario no encontrado' });
         }
         let usuario = result.rows[0];
-        usuario.state = usuario.state ? 'verificado' : 'no';
+        usuario.verificado = usuario.verificado ? 'verificado' : 'no';
         delete usuario.contraseña;
         res.json(usuario);
     } catch (error) {
@@ -153,6 +179,22 @@ router.delete('/:id', async (req, res) => {
         usuario.state = usuario.state ? 'verificado' : 'no';
         delete usuario.contraseña;
         res.json({ mensaje: 'Usuario eliminado', usuario });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Endpoint para obtener el total de usuarios online (conectados)
+// Debes ajustar la lógica según cómo determines si un usuario está online
+router.get('/online', async (req, res) => {
+    try {
+        // Ejemplo: si tienes una columna 'online' booleana en la tabla usuarios
+        // const result = await pool.query("SELECT COUNT(*) AS total FROM usuarios WHERE online = true");
+
+        // Si no tienes columna, aquí va una lógica temporal (todos verificados cuentan como online)
+        const result = await pool.query("SELECT COUNT(*) AS total FROM usuarios WHERE verificado = true");
+        const total = parseInt(result.rows[0].total, 10);
+        res.json({ total });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

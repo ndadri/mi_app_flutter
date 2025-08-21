@@ -39,7 +39,7 @@ app.get('/', (req, res) => {
   res.send('API is running');
 });
 
-const PORT = process.env.PORT || 3004;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`✅ Eventos API disponible en http://localhost:${PORT}/api/eventos`);

@@ -98,6 +98,7 @@ app.use((req, res, next) => {
 // Importar y usar las rutas de autenticación
 const authRoutes = require('../routes/authRoutes');
 const eventoRoutes = require('../routes/eventoRoutes');
+const crudUsuario = require('../crudUsuario');
 
 // Importar matchRoutes con manejo de errores
 let matchRoutes = null;
@@ -114,6 +115,7 @@ try {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/eventos', eventoRoutes);
+app.use('/api/usuarios', crudUsuario);
 
 // Solo usar matchRoutes si se cargó correctamente
 if (matchRoutes) {
