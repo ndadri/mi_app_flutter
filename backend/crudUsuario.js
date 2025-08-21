@@ -66,6 +66,16 @@ router.post('/', async (req, res) => {
 });
 
 // READ all usuarios
+// Endpoint para obtener el total de usuarios registrados
+router.get('/total', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT COUNT(*) AS total FROM usuarios');
+        const total = parseInt(result.rows[0].total, 10);
+        res.json({ total });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 router.get('/', async (req, res) => {
     try {
         const result = await pool.query('SELECT id, nombre, edad, ubicacion, fecha_nacimiento, email, state FROM usuarios');

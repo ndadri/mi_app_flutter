@@ -105,7 +105,7 @@ class SimpleLogin {
         'nombres': nombres,
         'apellidos': apellidos,
         'correo': correo,
-        'contrasena': contrasena,
+        'contraseña': contrasena,
         'genero': genero,
         'ubicacion': ubicacion,
         'fecha_nacimiento': fechaNacimiento,

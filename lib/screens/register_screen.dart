@@ -421,20 +421,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         items: const [
           DropdownMenuItem(
-            value: 'Hombre',
-            child: Text('Hombre'),
+            value: 'Masculino',
+            child: Text('Masculino'),
           ),
           DropdownMenuItem(
-            value: 'Mujer',
-            child: Text('Mujer'),
+            value: 'Femenino',
+            child: Text('Femenino'),
           ),
           DropdownMenuItem(
-            value: 'No Binario',
-            child: Text('No Binario'),
-          ),
-          DropdownMenuItem(
-            value: 'Prefiero no decirlo',
-            child: Text('Prefiero no decirlo'),
+            value: 'Otro',
+            child: Text('Otro'),
           ),
         ],
         onChanged: (String? newValue) {

@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgresql://anderson:123456@localhost:5432/petmatch',
+    connectionString: process.env.DATABASE_URL || 'postgresql://Alexis:123@localhost:5432/petmatch',
 });
 
 async function crearDatosPrueba() {

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../config/api_config.dart';
 
 void totalUsuariosAction(BuildContext context) {
   showDialog(
@@ -6,12 +9,13 @@ void totalUsuariosAction(BuildContext context) {
     builder: (context) => Dialog(
       backgroundColor: const Color(0xFF23243A),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
+      child: FutureBuilder<int>(
+        future: fetchTotalUsuarios(),
+        builder: (context, snapshot) {
           final screenWidth = MediaQuery.of(context).size.width;
           final isSmallScreen = screenWidth < 400;
           final isMediumScreen = screenWidth >= 400 && screenWidth < 600;
-          
+          int? total = snapshot.data;
           return Container(
             width: isSmallScreen ? screenWidth * 0.85 : (isMediumScreen ? 340 : 380),
             constraints: BoxConstraints(
@@ -69,16 +73,27 @@ void totalUsuariosAction(BuildContext context) {
                     ),
                   ),
                   SizedBox(height: isSmallScreen ? 24 : 32),
-                  Text(
-                    '3,250', // Aquí puedes poner el valor real
-                    style: TextStyle(
-                      fontFamily: 'AntonSC',
-                      fontWeight: FontWeight.bold,
-                      fontSize: isSmallScreen ? 44 : 54,
-                      color: Color(0xFF7A45D1),
-                      letterSpacing: 2.0,
+                  if (snapshot.connectionState == ConnectionState.waiting)
+                    CircularProgressIndicator(color: Color(0xFF7A45D1))
+                  else if (snapshot.hasError)
+                    Text(
+                      'Error al cargar',
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: isSmallScreen ? 18 : 22,
+                      ),
+                    )
+                  else
+                    Text(
+                      total?.toString() ?? '-',
+                      style: TextStyle(
+                        fontFamily: 'AntonSC',
+                        fontWeight: FontWeight.bold,
+                        fontSize: isSmallScreen ? 44 : 54,
+                        color: Color(0xFF7A45D1),
+                        letterSpacing: 2.0,
+                      ),
                     ),
-                  ),
                   SizedBox(height: isSmallScreen ? 8 : 12),
                   Text(
                     'Usuarios registrados',
@@ -120,4 +135,24 @@ void totalUsuariosAction(BuildContext context) {
       ),
     ),
   );
+}
+
+Future<int> fetchTotalUsuarios() async {
+  try {
+    print('Solicitando total de usuarios a: ${ApiConfig.baseUrl}/api/usuarios/total');
+    final response = await http.get(Uri.parse('${ApiConfig.baseUrl}/api/usuarios/total'));
+    print('Código de respuesta: [33m${response.statusCode}[0m');
+    print('Body: [36m${response.body}[0m');
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print('Data decodificada: $data');
+      return data['total'] ?? 0;
+    } else {
+      print('Error: código inesperado ${response.statusCode}');
+      throw Exception('Error al obtener el total');
+    }
+  } catch (e) {
+    print('Error en fetchTotalUsuarios: $e');
+    throw Exception('Error de red');
+  }
 }

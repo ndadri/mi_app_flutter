@@ -34,21 +34,21 @@ router.post('/registrar', async (req, res) => {
     try {
         console.log('📝 Datos recibidos:', JSON.stringify(req.body, null, 2));
         
-        let { nombres, apellidos, correo, contrasena, genero, ubicacion, fecha_nacimiento, coordenadas } = req.body;
+        let { nombres, apellidos, correo, contraseña, genero, ubicacion, fecha_nacimiento, coordenadas } = req.body;
 
         // Validaciones básicas
         nombres = typeof nombres === 'string' ? nombres.trim() : '';
         apellidos = typeof apellidos === 'string' ? apellidos.trim() : '';
         correo = typeof correo === 'string' ? correo.trim().toLowerCase() : '';
-        contrasena = typeof contrasena === 'string' ? contrasena : '';
+        contraseña = typeof contraseña === 'string' ? contraseña : '';
         genero = typeof genero === 'string' ? genero.trim() : '';
         ubicacion = typeof ubicacion === 'string' ? ubicacion.trim() : '';
 
-        console.log('🔍 Contrasena procesada:', { 
-            original: req.body.contrasena, 
-            processed: contrasena, 
-            length: contrasena.length,
-            type: typeof contrasena
+        console.log('🔍 Contraseña procesada:', { 
+            original: req.body.contraseña, 
+            processed: contraseña, 
+            length: contraseña.length,
+            type: typeof contraseña
         });
 
         // Validar nombres
@@ -67,13 +67,13 @@ router.post('/registrar', async (req, res) => {
             return res.status(400).json({ mensaje: 'El correo electrónico no es válido.' });
         }
 
-        // Validar contrasena
-        if (!contrasena || contrasena.length < 6) {
+        // Validar contraseña
+        if (!contraseña || contraseña.length < 6) {
             return res.status(400).json({ mensaje: 'La contraseña debe tener al menos 6 caracteres.' });
         }
 
         // Validar género
-        const generosValidos = ['Hombre', 'Mujer', 'No Binario', 'Prefiero no decirlo'];
+    const generosValidos = ['Masculino', 'Femenino', 'Otro'];
         if (!genero || !generosValidos.includes(genero)) {
             return res.status(400).json({ mensaje: 'Género no válido. Valores permitidos: Hombre, Mujer, No Binario, Prefiero no decirlo' });
         }
@@ -95,9 +95,9 @@ router.post('/registrar', async (req, res) => {
             return res.status(400).json({ mensaje: 'Este correo electrónico ya está registrado.' });
         }
 
-        // Encriptar la contrasena
+        // Encriptar la contraseña
         const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(contrasena, saltRounds);
+        const hashedPassword = await bcrypt.hash(contraseña, saltRounds);
 
         // Generar username automáticamente basado en nombres (temporalmente comentado)
         let username = nombres.toLowerCase().replace(/\s+/g, '');
@@ -113,7 +113,7 @@ router.post('/registrar', async (req, res) => {
 
         // Insertar el usuario en la base de datos (sin username temporalmente)
         const query = `
-            INSERT INTO usuarios (nombres, apellidos, correo, contrasena, genero, ubicacion, fecha_nacimiento, latitud, longitud)
+            INSERT INTO usuarios (nombres, apellidos, correo, contraseña, genero, ubicacion, fecha_nacimiento, latitud, longitud)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING id, nombres, apellidos, correo, genero, ubicacion, fecha_nacimiento
         `;

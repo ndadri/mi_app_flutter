@@ -12,6 +12,7 @@ import 'screens/matches_screen.dart'; // Pantalla de matches
 import 'screens/perfil_screen.dart'; // Pantalla de perfil
 import 'screens/eventos_screen.dart'; // Pantalla de eventos
 import 'screens/admin_panel_screen.dart'; // Panel administrativo
+import 'screens/dates_screen.dart'; // Pantalla de citas
 
 // Método principal que inicia la aplicación
 void main() async {

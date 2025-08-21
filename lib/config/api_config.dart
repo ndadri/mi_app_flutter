@@ -2,7 +2,7 @@ class ApiConfig {
   // CONFIGURACIÓN CORREGIDA PARA DISPOSITIVO FÍSICO
   // Para emulador usar: 'http://10.0.2.2:3002'
   // Para dispositivo físico usar: IP real de tu PC
-  static const String baseUrl = 'http://192.168.1.24:3002';
+  static const String baseUrl = 'http://10.0.2.2:3002';
   
   // IPs alternativas por si la principal no funciona
   static const List<String> alternativeIPs = [
