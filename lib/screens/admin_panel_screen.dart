@@ -5,8 +5,6 @@ import 'admin_profile.dart';
 import 'stat_button.dart';
 import 'stat_total_usuarios_action.dart';
 import 'stat_usuarios_activos_action.dart';
-import 'stat_usuarios_online_action.dart';
-import 'stat_promedio_mascotas_usuario_action.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -386,18 +384,6 @@ class AdminStatsContent extends StatelessWidget {
                   icon: Icons.person,
                   label: 'USUARIOS ACTIVOS',
                   onPressed: () => usuariosActivosAction(context),
-                ),
-                const SizedBox(height: 16),
-                _buildStatButton(
-                  icon: Icons.wifi,
-                  label: 'USUARIOS ONLINE',
-                  onPressed: () => usuariosOnlineAction(context),
-                ),
-                const SizedBox(height: 16),
-                _buildStatButton(
-                  icon: Icons.show_chart,
-                  label: 'PROMEDIO MASCOTAS/USUARIO',
-                  onPressed: () => promedioMascotasUsuarioAction(context),
                 ),
               ],
             ),
