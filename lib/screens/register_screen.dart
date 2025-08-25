@@ -37,17 +37,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _registerUser() async {
     if (_isRegistering) return; // Prevenir múltiples llamadas
-    
+
     setState(() {
       _isRegistering = true;
     });
-    
+
     print('🚀 Iniciando proceso de registro...');
-    
+
     final String nombres = _nombresController.text;
     final String apellidos = _apellidosController.text;
     final String correo = _correoController.text;
-    final String contrasena = _contrasenaController.text;
+    final String password = _contrasenaController.text;
     final String genero = _selectedGenero ?? '';
     final String ubicacion = _ubicacionController.text;
     final String fechaNacimiento = _fechaNacimientoController.text;
@@ -56,7 +56,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     print('  - Nombres: $nombres');
     print('  - Apellidos: $apellidos');
     print('  - Correo: $correo');
-    print('  - Contraseña: ${contrasena.isNotEmpty ? "[ESTABLECIDA]" : "[VACÍA]"}');
+    print(
+        '  - Contraseña: ${password.isNotEmpty ? "[ESTABLECIDA]" : "[VACÍA]"}');
     print('  - Género: $genero');
     print('  - Ubicación: $ubicacion');
     print('  - Fecha nacimiento: $fechaNacimiento');
@@ -64,7 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (nombres.isEmpty ||
         apellidos.isEmpty ||
         correo.isEmpty ||
-        contrasena.isEmpty ||
+        password.isEmpty ||
         genero.isEmpty ||
         ubicacion.isEmpty ||
         fechaNacimiento.isEmpty) {
@@ -82,14 +83,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     // Validación de contraseña
-    final passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$');
-    if (!passwordRegex.hasMatch(contrasena)) {
+    final passwordRegex =
+        RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$');
+    if (!passwordRegex.hasMatch(password)) {
       setState(() {
         _isRegistering = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('La contraseña debe tener al menos 6 caracteres, una mayúscula, una minúscula y un número.'),
+          content: Text(
+              'La contraseña debe tener al menos 6 caracteres, una mayúscula, una minúscula y un número.'),
           duration: Duration(seconds: 2),
         ),
       );
@@ -100,20 +103,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       print('📍 Obteniendo ubicación...');
       // Obtener coordenadas si es posible
       final position = await LocationService.getCurrentLocation();
-      print('📍 Ubicación obtenida: ${position?.latitude}, ${position?.longitude}');
-      
+      print(
+          '📍 Ubicación obtenida: ${position?.latitude}, ${position?.longitude}');
+
       final userData = jsonEncode({
         'nombres': nombres,
         'apellidos': apellidos,
         'correo': correo,
-        'contraseña': contrasena,
+        'password': password,
         'genero': genero,
         'ubicacion': ubicacion,
         'fecha_nacimiento': fechaNacimiento,
-        if (position != null) 'coordenadas': {
-          'latitud': position.latitude,
-          'longitud': position.longitude,
-        },
+        if (position != null)
+          'coordenadas': {
+            'latitud': position.latitude,
+            'longitud': position.longitude,
+          },
       });
 
       print('🌐 Enviando petición a: ${ApiConfig.registrarEndpoint}');
@@ -132,11 +137,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
         print('✅ Registro exitoso');
-        
+
         // Mostrar mensaje temporal
         String mensaje = responseData['mensaje'];
-        mensaje += '\n💡 Usa tu CORREO ELECTRÓNICO y contraseña para iniciar sesión';
-        
+        mensaje +=
+            '\n💡 Usa tu CORREO ELECTRÓNICO y contraseña para iniciar sesión';
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(mensaje),
@@ -157,7 +163,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } else {
         print('❌ Error en el registro');
         final responseData = jsonDecode(response.body);
-        String errorMsg = responseData['mensaje'] ?? 'Error al registrar el usuario';
+        String errorMsg =
+            responseData['mensaje'] ?? 'Error al registrar el usuario';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMsg),
@@ -185,7 +192,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 6570)), // 18 años atrás
+      initialDate:
+          DateTime.now().subtract(const Duration(days: 6570)), // 18 años atrás
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
       builder: (BuildContext context, Widget? child) {
@@ -209,7 +217,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
     if (picked != null) {
       setState(() {
-        _fechaNacimientoController.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+        _fechaNacimientoController.text =
+            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
       });
     }
   }
@@ -221,7 +230,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       String? address = await LocationService.getCurrentAddress();
-      
+
       if (address != null) {
         setState(() {
           _ubicacionController.text = address;
@@ -236,7 +245,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No se pudo obtener la ubicación. Verifica los permisos.'),
+            content:
+                Text('No se pudo obtener la ubicación. Verifica los permisos.'),
             backgroundColor: Colors.orange,
             duration: Duration(seconds: 1),
           ),
@@ -351,9 +361,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           width: double.infinity,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _isRegistering 
-                                ? Colors.grey 
-                                : const Color(0xFF8B5CF6),
+                              backgroundColor: _isRegistering
+                                  ? Colors.grey
+                                  : const Color(0xFF8B5CF6),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -362,36 +372,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             onPressed: _isRegistering ? null : _registerUser,
                             child: _isRegistering
-                              ? const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ? const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.white),
+                                        ),
                                       ),
-                                    ),
-                                    SizedBox(width: 10),
-                                    Text(
-                                      'Registrando...',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
+                                      SizedBox(width: 10),
+                                      Text(
+                                        'Registrando...',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
+                                    ],
+                                  )
+                                : const Text(
+                                    'Registrarme',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                  ],
-                                )
-                              : const Text(
-                                  'Registrarme',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
                                   ),
-                                ),
                           ),
                         ),
                       ],
@@ -432,7 +444,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 )
               : null,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           labelStyle: const TextStyle(color: Color(0xFF666666)),
         ),
         items: const [
@@ -538,7 +551,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
                       ),
                     )
                   : const Icon(

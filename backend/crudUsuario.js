@@ -12,57 +12,7 @@ function isValidEmail(correo) {
     return /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(correo);
 }
 
-// CREATE usuario
-router.post('/', async (req, res) => {
-    try {
-    let { nombres, edad, ubicacion, fecha_nacimiento, correo, contraseña, verificado } = req.body;
-
-        // Basic validation
-        if (!nombres || !edad || !ubicacion || !fecha_nacimiento || !correo || !contraseña || typeof verificado === 'undefined') {
-            return res.status(400).json({ mensaje: 'Todos los campos son requeridos.' });
-        }
-        if (!isValidEmail(correo)) {
-            return res.status(400).json({ mensaje: 'Correo no válido.' });
-        }
-        if (contraseña.length < 6) {
-            return res.status(400).json({ mensaje: 'La contraseña debe tener al menos 6 caracteres.' });
-        }
-        // Validate verificado as boolean or string
-        let verificadoBool;
-        if (typeof verificado === 'boolean') {
-            verificadoBool = verificado;
-        } else if (typeof verificado === 'string') {
-            verificado = verificado.trim().toLowerCase();
-            if (verificado === 'verificado') verificadoBool = true;
-            else if (verificado === 'no') verificadoBool = false;
-            else return res.status(400).json({ mensaje: "El campo verificado debe ser 'verificado' o 'no'." });
-        } else {
-            return res.status(400).json({ mensaje: "El campo verificado debe ser 'verificado' o 'no'." });
-        }
-
-        // Check for duplicate email
-        const exists = await pool.query('SELECT id FROM usuarios WHERE correo = $1', [correo]);
-        if (exists.rows.length > 0) {
-            return res.status(409).json({ mensaje: 'El email ya está registrado.' });
-        }
-
-        // Hash password
-        const hashedPassword = await bcrypt.hash(contraseña, 10);
-
-        // Insert user
-        const result = await pool.query(
-            `INSERT INTO usuarios (nombres, edad, ubicacion, fecha_nacimiento, correo, contraseña, verificado)
-             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-            [nombres, edad, ubicacion, fecha_nacimiento, correo, hashedPassword, verificadoBool]
-        );
-        let usuario = result.rows[0];
-        usuario.verificado = usuario.verificado ? 'verificado' : 'no';
-        delete usuario.contraseña;
-        res.status(201).json(usuario);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// Registro de usuario solo por /api/auth/registrar. Este endpoint es solo para administración/consulta.
 
 // Endpoint para obtener el total de usuarios registrados
 router.get('/total', async (req, res) => {
