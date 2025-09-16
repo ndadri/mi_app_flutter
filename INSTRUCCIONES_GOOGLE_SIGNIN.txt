@@ -1,0 +1,54 @@
+============================================================
+📋 INSTRUCCIONES PARA RESOLVER ApiException: 10
+============================================================
+
+❌ PROBLEMA ACTUAL:
+   Error: PlatformException(sign_in_failed, com.google.android.gms.common.api.ApiException: 10: , null, null)
+   
+   ApiException: 10 = DEVELOPER_ERROR
+   Significa: No tienes un Client ID válido para Android
+
+✅ SOLUCIÓN PASO A PASO:
+
+1️⃣ IR A GOOGLE CLOUD CONSOLE:
+   https://console.cloud.google.com/apis/credentials
+
+2️⃣ SELECCIONAR TU PROYECTO:
+   - Proyecto: petmatch-google-signin
+   - Project ID: petmatch-google-signin
+
+3️⃣ CREAR CREDENCIALES PARA ANDROID:
+   - Clic en "Crear credenciales"
+   - Seleccionar "ID de cliente OAuth 2.0"
+   - Tipo de aplicación: ANDROID
+   - Nombre del paquete: com.example.mi_app_flutter
+   - SHA-1 de certificado: DA39A3EE5E6B4B0D3255BFEF95601890AFD80709
+
+4️⃣ OBTENER EL NUEVO CLIENT ID:
+   - Copia el Client ID que se genera (diferente al que tienes)
+   - Ejemplo: 1033930402349-NUEVO_ID_ANDROID.apps.googleusercontent.com
+
+5️⃣ ACTUALIZAR TU CÓDIGO:
+   - Reemplazar en google-services.json
+   - Reemplazar en strings.xml
+
+============================================================
+🔑 TU CONFIGURACIÓN ACTUAL (NO VÁLIDA PARA ANDROID):
+============================================================
+
+Client ID actual: 1033930402349-d064hi1k9hefcf0op18cqk5tahlb7cta.apps.googleusercontent.com
+Tipo: WEB CLIENT (por eso falla en Android)
+
+Package Name: com.example.mi_app_flutter
+SHA-1 necesario: DA39A3EE5E6B4B0D3255BFEF95601890AFD80709
+
+============================================================
+📝 NOTAS IMPORTANTES:
+============================================================
+
+- El Client ID actual es para WEB, no para ANDROID
+- Google requiere un Client ID específico para cada plataforma
+- Sin el Client ID correcto, siempre tendrás ApiException: 10
+- Una vez creado el Client ID para Android, el error desaparecerá
+
+============================================================

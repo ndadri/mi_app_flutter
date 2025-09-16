@@ -1,148 +1,512 @@
 // Importación del paquete de Flutter
 import 'package:flutter/material.dart';
+import '../services/match_service.dart';
+import 'dates_screen.dart';
 
 // Clase principal de la pantalla HomeScreen, que se mostrará al iniciar la app
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key}); // Constructor de la clase HomeScreen
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // Variables para manejar la mascota actual
+  Map<String, dynamic>? mascotaActual;
+  bool isLoading = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    // TODO: Cargar mascotas para mostrar
+  }
+  
+  // Función para manejar like/dislike
+  Future<void> _handleSwipe(bool isLike) async {
+    if (mascotaActual == null || isLoading) return;
+    
+    setState(() {
+      isLoading = true;
+    });
+    
+    final resultado = await MatchService.darLike(
+      mascotaId: mascotaActual!['id'],
+      isLike: isLike,
+    );
+    
+    setState(() {
+      isLoading = false;
+    });
+    
+    if (resultado['success']) {
+      if (resultado['isMatch'] == true) {
+        // ¡HAY MATCH! Mostrar notificación
+        _mostrarNotificacionMatch(resultado['match']);
+      }
+      
+      // TODO: Cargar siguiente mascota
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(resultado['message']),
+          backgroundColor: resultado['isMatch'] == true ? Colors.green : Colors.blue,
+          duration: const Duration(milliseconds: 500),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(resultado['message']),
+          backgroundColor: Colors.red,
+          duration: const Duration(milliseconds: 500),
+        ),
+      );
+    }
+  }
+  
+  // Mostrar notificación de match
+  void _mostrarNotificacionMatch(Map<String, dynamic> match) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.favorite, color: Colors.red, size: 30),
+            SizedBox(width: 10),
+            Text('¡Es un Match!', style: TextStyle(color: Colors.red)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '🎉 Tu mascota hizo match con ${match['mascota_2']['nombre']}!',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Ahora pueden chatear en la sección de Matches',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('Continuar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.pushNamed(context, '/matches');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE91E63),
+            ),
+            child: const Text('Ver Matches', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // Configuración del fondo de la pantalla
-      backgroundColor: const Color(0xFFEDEDED), // Color gris claro para el fondo
+      backgroundColor:
+          const Color(0xFFEDEDED), // Color gris claro para el fondo
 
-      // Contenedor principal con SafeArea para evitar que el contenido se solape con la barra superior
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
-            final height = constraints.maxHeight;
+      // Contenedor principal SIN SafeArea para que el header ocupe toda la pantalla
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
 
-            // Ajustes responsivos
-            final isTablet = width > 900;
-            final headerHeight = isTablet ? height * 0.13 : height * 0.10;
-            final cardHeight = isTablet ? height * 0.90 : height * 0.65;
-            final cardPadding = isTablet ? width * 0.15 : 20.0;
-            final cardBorderRadius = isTablet ? 32.0 : 20.0;
-            final cardTextFont = isTablet ? 28.0 : 20.0;
-            final cardSubTextFont = isTablet ? 22.0 : 16.0;
-            final buttonSize = isTablet ? 90.0 : 65.0;
-            final iconSize = isTablet ? 44.0 : 32.0;
-            final headerFontSize = isTablet ? 40.0 : 30.0;
-            final headerPadding = isTablet ? 32.0 : 20.0;
-            final spaceBetween = isTablet ? 105.0 : 70.0;
+          // Ajustes responsivos
+          final isTablet = width >= 600 && width < 1024;
+          final isDesktop = width >= 1024;
+          final isSmall = width < 400;
 
-            return Column(
+          final cardHeight = isDesktop
+              ? height * 0.70
+              : isTablet
+                  ? height * 0.65
+                  : height * 0.50;
+          final cardPadding = isDesktop
+              ? width * 0.25
+              : isTablet
+                  ? width * 0.15
+                  : width * 0.05;
+          final cardBorderRadius = isDesktop
+              ? 36.0
+              : isTablet
+                  ? 28.0
+                  : 18.0;
+          final cardTextFont = isDesktop
+              ? 32.0
+              : isTablet
+                  ? 24.0
+                  : 18.0;
+          final buttonSize = isDesktop
+              ? 100.0
+              : isTablet
+                  ? 80.0
+                  : 56.0;
+          final iconSize = isDesktop
+              ? 48.0
+              : isTablet
+                  ? 36.0
+                  : 26.0;
+          final headerPadding = isDesktop
+              ? 40.0
+              : isTablet
+                  ? 28.0
+                  : 16.0;
+
+          return Scaffold(
+            body: Column(
               children: [
-                // Encabezado
+                // HEADER QUE OCUPA TODA LA PARTE SUPERIOR INCLUIDA LA BARRA DE ESTADO
                 Container(
-                  height: headerHeight,
+                  height: 120,
                   width: double.infinity,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF7A45D1), // Color de fondo morado
+                    color: Color(0xFF7A45D1),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(35),
+                      bottomRight: Radius.circular(35),
+                    ),
                   ),
-                  alignment: Alignment.bottomCenter, // Alinea el texto en la parte inferior
-                  padding: EdgeInsets.only(bottom: headerPadding), // Espaciado en la parte inferior
-                  child: Text(
-                    'Sexo entre mascotas', // Texto principal en el encabezado
-                    style: TextStyle(
-                      fontSize: headerFontSize, // Tamaño de la fuente
-                      fontWeight: FontWeight.bold, // Estilo de la fuente
-                      color: Colors.white, // Color de la fuente blanco
-                      letterSpacing: 1.5, // Espaciado entre letras
+                  child: SafeArea(
+                    child: Container(
+                      alignment: Alignment.bottomCenter,
+                      padding: EdgeInsets.only(
+                        bottom: isSmall
+                            ? 20
+                            : (isTablet ? 24 : 28), // Padding responsivo
+                      ),
+                      child: Text(
+                        'PET MATCH',
+                        style: TextStyle(
+                          fontFamily: 'AntonSC',
+                          fontSize: isSmall
+                              ? 34
+                              : (isTablet ? 38 : 42), // Tamaño responsivo
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-                SizedBox(height: spaceBetween), // Espaciado entre el encabezado y la tarjeta
-
-                // CARD DE LA MASCOTA (diseño fijo por ahora)
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: cardPadding), // Padding en los lados
-                  child: Container(
-                    width: double.infinity, // Ocupa todo el ancho de la pantalla
-                    height: cardHeight, // Altura de la tarjeta
-                    decoration: BoxDecoration(
-                      color: Colors.white, // Fondo blanco
-                      borderRadius: BorderRadius.circular(cardBorderRadius), // Bordes redondeados
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black26, blurRadius: 8), // Sombra de la tarjeta
-                      ],
-                      image: const DecorationImage(
-                        image: NetworkImage(
-                          'https://images.pexels.com/photos/4587995/pexels-photo-4587995.jpeg', // Imagen de la mascota
-                        ),
-                        fit: BoxFit.cover, // Ajuste de la imagen para cubrir todo el contenedor
-                      ),
-                    ),
-                    alignment: Alignment.bottomLeft, // Alinea el contenido de la tarjeta en la parte inferior izquierda
-                    padding: const EdgeInsets.all(20), // Espaciado interno de la tarjeta
+                // CONTENIDO PRINCIPAL - TARJETAS CENTRADAS
+                Expanded(
+                  child: SingleChildScrollView(
                     child: Container(
-                      padding: const EdgeInsets.all(12), // Espaciado interno del contenedor de texto
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9), // Fondo blanco con opacidad
-                        borderRadius: BorderRadius.circular(12), // Bordes redondeados
-                      ),
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: cardPadding),
                       child: Column(
-                        mainAxisSize: MainAxisSize.min, // Ajusta el tamaño según el contenido
-                        crossAxisAlignment: CrossAxisAlignment.start, // Alinea el contenido a la izquierda
+                        mainAxisAlignment:
+                            MainAxisAlignment.center, // Centra verticalmente
+                        crossAxisAlignment:
+                            CrossAxisAlignment.center, // Centra horizontalmente
                         children: [
-                          Text(
-                            'Luna, 2 años', // Nombre y edad de la mascota
-                            style: TextStyle(
-                              fontSize: cardTextFont, // Tamaño de la fuente
-                              fontWeight: FontWeight.bold, // Estilo de la fuente
+                          // Espaciado superior para centrar mejor
+                          SizedBox(height: headerPadding),
+
+                          // TARJETA DE MASCOTA - IMAGEN
+                          Container(
+                            width: double.infinity,
+                            constraints: BoxConstraints(
+                              maxWidth: isSmall
+                                  ? 320
+                                  : (isTablet
+                                      ? 400
+                                      : 450), // Ancho máximo responsivo
+                            ),
+                            height: cardHeight * 0.65, // Altura responsiva
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(
+                                  cardBorderRadius +
+                                      5), // Bordes más redondeados
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.15),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                              image: const DecorationImage(
+                                image: NetworkImage(
+                                  'https://images.pexels.com/photos/4587995/pexels-photo-4587995.jpeg',
+                                ),
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
-                          Text(
-                            'Golden Retriever', // Raza de la mascota
-                            style: TextStyle(fontSize: cardSubTextFont), // Estilo del texto
+
+                          // Espaciado entre imagen e información
+                          SizedBox(height: isSmall ? 16 : 20),
+
+                          // INFORMACIÓN DE LA MASCOTA - CENTRADA
+                          Container(
+                            width: double.infinity,
+                            constraints: BoxConstraints(
+                              maxWidth: isSmall
+                                  ? 320
+                                  : (isTablet
+                                      ? 400
+                                      : 450), // Mismo ancho que la imagen
+                            ),
+                            padding: EdgeInsets.all(
+                                isSmall ? 18 : 24), // Más padding
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(
+                                  cardBorderRadius +
+                                      5), // Bordes más redondeados
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Nombre y edad
+                                Text(
+                                  'Luna, 2 años',
+                                  style: TextStyle(
+                                    fontFamily: 'AntonSC',
+                                    fontSize: cardTextFont * 0.8,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF7A45D1),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: isSmall ? 4 : 8),
+
+                                // Ubicación
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.location_on,
+                                      size: isSmall ? 12 : 14,
+                                      color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Cerca - En Quito',
+                                      style: TextStyle(
+                                        fontSize: isSmall ? 10 : 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: isSmall ? 6 : 10),
+
+                                // Descripción
+                                Text(
+                                  'Soy buena onda',
+                                  style: TextStyle(
+                                    fontSize: isSmall ? 11 : 13,
+                                    color: Colors.black87,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: isSmall ? 8 : 12),
+
+                                // Información en filas
+                                Column(
+                                  children: [
+                                    // Tipo y Raza
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        _infoItem(Icons.pets, 'Perro', isSmall),
+                                        _infoItem(
+                                            Icons.pets,
+                                            'Golden Retriever',
+                                            isSmall), // <-- Cambiado de Icons.category a Icons.pets
+                                      ],
+                                    ),
+                                    SizedBox(height: isSmall ? 6 : 8),
+
+                                    // Sexo y Estado
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        _infoItem(Icons.pets, 'Hembra',
+                                            isSmall), // <-- Cambiado de Icons.wc a Icons.pets
+                                        _infoItem(Icons.check_circle,
+                                            'Disponible', isSmall),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: isSmall ? 8 : 12),
+                              ],
+                            ),
+                          ),
+
+                          // Espaciado antes de los botones
+                          SizedBox(height: isSmall ? 20 : 28),
+
+                          // BOTONES DE LIKE Y DISLIKE - CENTRADOS
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _circleButton(Icons.close, Colors.redAccent,
+                                  buttonSize, iconSize, () => _handleSwipe(false)),
+                              SizedBox(
+                                  width: isDesktop
+                                      ? 70
+                                      : isTablet
+                                          ? 55
+                                          : 45), // Espacio entre botones
+                              _circleButton(Icons.favorite, Colors.green,
+                                  buttonSize, iconSize, () => _handleSwipe(true)),
+                            ],
+                          ),
+
+                          // Espaciado final
+                          SizedBox(height: headerPadding),
+
+                          // Botón para acceder a la pantalla de citas
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFE040FB),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 28),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              elevation: 4,
+                            ),
+                            icon: const Icon(Icons.event_available),
+                            label: const Text(
+                              'Ver Citas',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const DatesScreen(),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-
-                SizedBox(height: spaceBetween), // Espaciado entre la tarjeta y los botones
-
-                // BOTONES DE LIKE Y DISLIKE
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center, // Centra los botones horizontalmente
-                  children: [
-                    _circleButton(Icons.close, Colors.redAccent, buttonSize, iconSize), // Botón de dislike
-                    SizedBox(width: isTablet ? 60 : 40), // Espaciado entre los botones
-                    _circleButton(Icons.favorite, Colors.green, buttonSize, iconSize), // Botón de like
-                  ],
-                ),
               ],
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
 
       // NAV INFERIOR - Barra de navegación en la parte inferior
       bottomNavigationBar: LayoutBuilder(
         builder: (context, constraints) {
-          final isTablet = constraints.maxWidth > 600;
-          return BottomNavigationBar(
-            selectedItemColor: const Color(0xFF7A45D1), // Color cuando un item está seleccionado
-            unselectedItemColor: Colors.grey, // Color cuando un item no está seleccionado
-            iconSize: isTablet ? 38 : 24,
-            selectedFontSize: isTablet ? 20 : 14,
-            unselectedFontSize: isTablet ? 18 : 12,
-            currentIndex: 1, // Ítem seleccionado inicialmente (Inicio)
-            onTap: (index) {
-              if (index == 0) {
-                Navigator.pushNamed(context, '/matches'); // Navegar a Matches
-              } else if (index == 2) {
-                Navigator.pushNamed(context, '/register_pet'); // Navegar al registro de mascotas
-              }
-            },
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Matches'), // Ítem de Matches
-              BottomNavigationBarItem(icon: Icon(Icons.pets), label: 'Inicio'), // Ítem de Inicio
-              BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'), // Ítem de Perfil
-            ],
+          final isTablet =
+              constraints.maxWidth >= 600 && constraints.maxWidth < 1024;
+          final isDesktop = constraints.maxWidth >= 1024;
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft:
+                    Radius.circular(20), // <-- Borde curvo superior izquierdo
+                topRight:
+                    Radius.circular(20), // <-- Borde curvo superior derecho
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 8,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: Colors
+                    .transparent, // <-- Transparente para que se vea el container
+                elevation: 0, // <-- Sin elevación para evitar sombras dobles
+                selectedItemColor: const Color(0xFF7A45D1),
+                unselectedItemColor: Colors.grey,
+                iconSize: isDesktop
+                    ? 40
+                    : isTablet
+                        ? 32
+                        : 22,
+                selectedFontSize: isDesktop
+                    ? 22
+                    : isTablet
+                        ? 16
+                        : 12,
+                unselectedFontSize: isDesktop
+                    ? 20
+                    : isTablet
+                        ? 14
+                        : 10,
+                currentIndex: 1,
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.favorite),
+                    label: 'Match',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.pets),
+                    label: 'Inicio',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.event),
+                    label: 'Eventos',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.person),
+                    label: 'Perfil',
+                  ),
+                ],
+                onTap: (index) {
+                  if (index == 0) {
+                    Navigator.pushReplacementNamed(context, '/matches');
+                  } else if (index == 1) {
+                    // Inicio, no navega
+                  } else if (index == 2) {
+                    Navigator.pushReplacementNamed(context, '/eventos');
+                  } else if (index == 3) {
+                    Navigator.pushReplacementNamed(context, '/perfil');
+                  }
+                },
+              ),
+            ),
           );
         },
       ),
@@ -150,21 +514,51 @@ class HomeScreen extends StatelessWidget {
   }
 
   // Widget para los botones circulares (like y dislike)
-  Widget _circleButton(IconData icon, Color color, double size, double iconSize) {
+  Widget _circleButton(
+      IconData icon, Color color, double size, double iconSize, VoidCallback onPressed) {
     return Container(
       width: size, // Ancho del botón
       height: size, // Alto del botón
       decoration: BoxDecoration(
-        shape: BoxShape.circle, // Forma circular
+        borderRadius:
+            BorderRadius.circular(size * 0.3), // <-- Bordes curvos suaves
         color: Colors.white, // Color de fondo del botón
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)], // Sombra del botón
+        boxShadow: const [
+          BoxShadow(color: Colors.black26, blurRadius: 4)
+        ], // Sombra del botón
       ),
       child: IconButton(
         icon: Icon(icon, size: iconSize), // Ícono dentro del botón
         color: color, // Color del ícono (rojo para dislike, verde para like)
-        onPressed: () {
-          // Aquí irá la lógica de swipe (no implementada aún)
-        },
+        onPressed: isLoading ? null : onPressed, // Deshabilitar si está cargando
+      ),
+    );
+  }
+
+  // Widget para información con icono
+  Widget _infoItem(IconData icon, String text, bool isSmall) {
+    return Expanded(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: isSmall ? 14 : 16,
+            color: const Color(0xFF7A45D1),
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: isSmall ? 11 : 13,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

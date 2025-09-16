@@ -8,10 +8,10 @@ class PetDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Datos falsos por ahora (pueden venir por parámetros luego)
-    final String nombre = 'Luna'; // Nombre de la mascota
-    final String edad = '2 años'; // Edad de la mascota
-    final String raza = 'Golden Retriever'; // Raza de la mascota
-    final String descripcion = 'Luna es una perrita muy cariñosa, juguetona y le encanta correr en el parque. Busca un hogar lleno de amor.'; // Descripción de la mascota
+    const String nombre = 'Luna'; // Nombre de la mascota
+    const String edad = '2 años'; // Edad de la mascota
+    const String raza = 'Golden Retriever'; // Raza de la mascota
+    const String descripcion = 'Luna es una perrita muy cariñosa, juguetona y le encanta correr en el parque. Busca un hogar lleno de amor.'; // Descripción de la mascota
 
     return Scaffold(
       // AppBar de la pantalla
@@ -51,15 +51,15 @@ class PetDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start, // Alineación a la izquierda
                 children: [
                   // Mostrar el nombre y la edad de la mascota
-                  Text(
+                  const Text(
                     '$nombre • $edad', // Texto que combina el nombre y la edad
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold), // Estilo del texto (tamaño y negrita)
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold), // Estilo del texto (tamaño y negrita)
                   ),
                   const SizedBox(height: 8), // Espaciado entre el nombre y la raza
                   // Mostrar la raza de la mascota
-                  Text(
+                  const Text(
                     raza,
-                    style: const TextStyle(fontSize: 18, color: Colors.grey), // Estilo del texto (gris)
+                    style: TextStyle(fontSize: 18, color: Colors.grey), // Estilo del texto (gris)
                   ),
                   const Divider(height: 30, thickness: 1), // Línea divisoria
                   const Text(
@@ -68,9 +68,9 @@ class PetDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 6), // Espaciado entre el título y la descripción
                   // Mostrar la descripción de la mascota
-                  Text(
+                  const Text(
                     descripcion,
-                    style: const TextStyle(fontSize: 16), // Estilo del texto (tamaño de fuente)
+                    style: TextStyle(fontSize: 16), // Estilo del texto (tamaño de fuente)
                   ),
                   const Spacer(), // Espaciador flexible que empuja el contenido hacia arriba
                   // Botón para mostrar el interés en la mascota

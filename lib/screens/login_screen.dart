@@ -1,7 +1,15 @@
-// Importación del paquete Flutter para la interfaz de usuario
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-// Clase principal para la pantalla de Login
+import 'forgot_password_screen.dart';
+import 'home_screen.dart';
+import 'admin_panel_screen.dart';
+import '../services/enhanced_google_auth.dart';
+import '../services/auto_login_service.dart'; // Nuestro nuevo servicio automático
+import '../services/session_manager.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -10,226 +18,582 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  bool _obscurePassword = true; // Controla si la contraseña es visible o no
-  bool _emailValid = true; // Simulación de validación del email
+  bool _obscurePassword = true;
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  // Método para manejar el inicio de sesión - AUTO DETECT IP
+  Future<void> loginUsuario(String username, String password) async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      print('🚀 Iniciando proceso de login...');
+      
+      // Verificar credenciales de administrador rápidamente
+      if (username == 'andersonsoto102@gmail.com' && password == 'Andersonsoto10') {
+        setState(() {
+          _isLoading = false;
+        });
+        
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminPanelScreen()),
+        );
+        return;
+      }
+
+      // Usar el servicio automático que encuentra la IP correcta
+      final result = await AutoLoginService.autoLogin(username, password);
+
+      if (result['success']) {
+        // Guardar información del usuario en SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await Future.wait([
+          prefs.setInt('user_id', result['user']['id']),
+          prefs.setString('user_email', result['user']['correo']),
+          prefs.setString('user_token', result['token']),
+        ]);
+        
+        // Marcar sesión como activa usando SessionManager
+        await SessionManager.markAsLoggedIn();
+        
+        // Si encontramos una IP que funciona, guardarla para futuros usos
+        if (result['workingIP'] != null) {
+          await prefs.setString('working_ip', result['workingIP']);
+          print('💾 IP guardada para futuros usos: ${result['workingIP']}');
+        }
+        
+        setState(() {
+          _isLoading = false;
+        });
+        
+        print('🎉 Login exitoso, navegando a home...');
+        
+        // Mostrar mensaje de éxito brevemente
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('¡Login exitoso!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+        
+        // Navegación a home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = result['message'];
+        });
+        
+        print('❌ Login falló: ${result['message']}');
+      }
+    } catch (e) {
+      print('💥 Error inesperado en login: $e');
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Error inesperado: $e';
+      });
+    }
+  }
+
+  // Función para probar conexión (debug)
+  Future<void> _testConnection() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      print('🧪 Iniciando prueba de conexión...');
+      
+      final canConnect = await AutoLoginService.quickConnectionTest();
+      
+      setState(() {
+        _isLoading = false;
+      });
+      
+      if (canConnect) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ ¡Conexión exitosa! El servidor está accesible.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        print('✅ Prueba de conexión exitosa');
+      } else {
+        setState(() {
+          _errorMessage = 'No se pudo conectar al servidor.\n\n'
+                         'Verifica que:\n'
+                         '• Tu teléfono y PC estén en la misma WiFi\n'
+                         '• El servidor esté corriendo\n'
+                         '• No haya firewall bloqueando';
+        });
+        print('❌ Prueba de conexión falló');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Error en prueba de conexión: $e';
+      });
+      print('💥 Error en prueba: $e');
+    }
+  }
+
+  // Login con Google - CON SINCRONIZACIÓN BACKEND
+  Future<void> _loginWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // Paso 1: Login con Google + Firebase
+      final result = await EnhancedGoogleAuth.signInWithGoogle();
+      
+      if (result != null && result['success']) {
+        final userData = result['user'];
+        
+        // Paso 2: Sincronizar con el backend para obtener datos completos
+        print('🔄 Sincronizando con backend para obtener datos completos...');
+        
+        try {
+          // Usar el endpoint de social-login del backend
+          final response = await http.post(
+            Uri.parse('http://192.168.1.24:3004/api/auth/social-login'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'email': userData['email'],
+              'name': userData['displayName'],
+              'provider': 'google',
+              'photoURL': userData['photoURL'] ?? '',
+            }),
+          ).timeout(const Duration(seconds: 10));
+          
+          if (response.statusCode == 200) {
+            final backendData = jsonDecode(response.body);
+            print('✅ Sincronización exitosa con backend');
+            print('📄 Datos del backend: ${response.body}');
+            
+            // Guardar toda la información (Google + Backend)
+            final prefs = await SharedPreferences.getInstance();
+            final backendUser = backendData['user'];
+            
+            await Future.wait([
+              // Datos de Google/Firebase
+              prefs.setString('user_id_google', userData['uid']),
+              prefs.setString('user_email', userData['email']),
+              prefs.setString('user_name', userData['displayName']),
+              prefs.setString('login_type', 'google'),
+              prefs.setString('user_token', backendData['token']),
+              
+              // Datos completos del backend
+              prefs.setInt('user_id', backendUser['id']),
+              prefs.setString('profile_nombres', backendUser['nombres'] ?? ''),
+              prefs.setString('profile_apellidos', backendUser['apellidos'] ?? ''),
+              prefs.setString('profile_genero', backendUser['genero'] ?? ''),
+              prefs.setString('profile_ubicacion', backendUser['ubicacion'] ?? ''),
+              prefs.setString('profile_fecha_nacimiento', backendUser['fecha_nacimiento'] ?? ''),
+            ]);
+            
+            print('💾 Datos completos guardados en SharedPreferences');
+            
+          } else {
+            print('⚠️ Error en sincronización con backend: ${response.statusCode}');
+            print('📄 Respuesta: ${response.body}');
+            
+            // Continuar con solo los datos de Google
+            final prefs = await SharedPreferences.getInstance();
+            await Future.wait([
+              prefs.setString('user_id_google', userData['uid']),
+              prefs.setString('user_email', userData['email']),
+              prefs.setString('user_name', userData['displayName']),
+              prefs.setString('login_type', 'google'),
+            ]);
+          }
+          
+        } catch (e) {
+          print('⚠️ Error al sincronizar con backend: $e');
+          
+          // Continuar con solo los datos de Google
+          final prefs = await SharedPreferences.getInstance();
+          await Future.wait([
+            prefs.setString('user_id_google', userData['uid']),
+            prefs.setString('user_email', userData['email']),
+            prefs.setString('user_name', userData['displayName']),
+            prefs.setString('login_type', 'google'),
+          ]);
+        }
+        
+        // Marcar sesión como activa usando SessionManager
+        await SessionManager.markAsLoggedIn();
+        
+        setState(() {
+          _isLoading = false;
+        });
+        
+        // Navegación inmediata sin snackbar
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = result?['message'] ?? 'Error en login con Google';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Error inesperado: $e';
+      });
+    }
+  }
+
+  // Login con Facebook - temporalmente deshabilitado
+  Future<void> _loginWithFacebook() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('⚠️ Facebook login temporalmente deshabilitado para diagnóstico'),
+        backgroundColor: Colors.orange,
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final hasKeyboard = keyboardHeight > 0;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenHeight < 700;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFFEDEDED), // Color de fondo gris claro
-      body: SingleChildScrollView( // Hacemos la pantalla desplazable en caso de que el teclado se active
-        child: Column(
-          children: [
-            // Header con color morado y texto 'Pet Match'
-            Container(
-              height: 150, // Altura del contenedor
-              width: double.infinity, // Toma todo el ancho de la pantalla
-              decoration: const BoxDecoration(
-                color: Color(0xFF7A45D1), // Color morado
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(35), // Bordes redondeados solo en la parte inferior
-                  bottomRight: Radius.circular(35),
-                ),
-              ),
-              alignment: Alignment.bottomCenter, // Alinea el texto en la parte inferior
-              padding: const EdgeInsets.only(bottom: 20), // Espaciado inferior
-              child: const Text(
-                'Pet Match', // Título principal de la app
-                style: TextStyle(
-                  fontSize: 60, // Tamaño de la fuente
-                  fontWeight: FontWeight.bold, // Fuente en negrita
-                  color: Colors.white, // Color de texto blanco
-                  letterSpacing: 1.5, // Espaciado entre letras
-                ),
-              ),
+      backgroundColor: const Color(0xFFEDEDED),
+      resizeToAvoidBottomInset: false, // Evita el overflow amarillo
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height,
             ),
-            const SizedBox(height: 50), // Espacio entre el encabezado y el formulario
-
-            // Card blanca con el formulario de inicio de sesión
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24), // Padding horizontal
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28), // Padding interno
-                decoration: BoxDecoration(
-                  color: Colors.white, // Fondo blanco
-                  borderRadius: BorderRadius.circular(16), // Bordes redondeados
-                  boxShadow: [ // Sombra para dar un efecto de elevación
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08), // Color de la sombra
-                      blurRadius: 16, // Desenfoque de la sombra
-                      offset: const Offset(0, 8), // Desplazamiento de la sombra
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch, // Alinea el contenido a la izquierda
-                  children: [
-                    const Text(
-                      'Iniciar Sesión', // Título del formulario
-                      textAlign: TextAlign.center, // Centra el texto
-                      style: TextStyle(
-                        fontSize: 22, // Tamaño de la fuente
-                        fontWeight: FontWeight.w600, // Estilo de la fuente
-                        color: Colors.black87, // Color del texto
+            child: IntrinsicHeight(
+              child: Column(
+                children: [
+                  // HEADER QUE OCUPA TODA LA PARTE SUPERIOR INCLUIDA LA BARRA DE ESTADO
+                  Container(
+                    height: (hasKeyboard ? (isSmallScreen ? 80 : 100) : 120) + MediaQuery.of(context).padding.top,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF7A45D1),
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(35),
+                        bottomRight: Radius.circular(35),
                       ),
                     ),
-                    const SizedBox(height: 24), // Espaciado entre el título y el campo de texto
-
-                    // Campo de texto para el nombre de usuario (simula validación de email)
-                    TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Nombre de Usuario', // Texto del campo
-                        hintText: 'Umetale@gmail.com', // Texto de ayuda
-                        suffixIcon: _emailValid
-                            ? const Icon(Icons.check_circle, color: Colors.green) // Ícono de validación
-                            : null, // Si la validación es falsa, no muestra el ícono
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10), // Bordes redondeados
+                    child: SafeArea(
+                      child: Container(
+                        alignment: Alignment.bottomCenter,
+                        padding: EdgeInsets.only(
+                          bottom: hasKeyboard 
+                            ? (isSmallScreen ? 8 : (screenWidth >= 600 ? 12 : 16))
+                            : (screenWidth < 400 ? 16 : (screenWidth >= 600 ? 20 : 24)),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 18), // Espaciado entre el campo de texto y la contraseña
-
-                    // Campo de texto para la contraseña
-                    TextField(
-                      obscureText: _obscurePassword, // Hace la contraseña invisible por defecto
-                      decoration: InputDecoration(
-                        labelText: 'Contraseña', // Texto del campo
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off // Ícono para ocultar la contraseña
-                                : Icons.visibility, // Ícono para mostrar la contraseña
-                            color: Colors.grey,
+                        child: Text(
+                          'PET MATCH',
+                          style: TextStyle(
+                            fontFamily: 'AntonSC',
+                            fontSize: hasKeyboard 
+                              ? (isSmallScreen ? 24 : (screenWidth >= 600 ? 28 : 32))
+                              : (screenWidth < 400 ? 34 : (screenWidth >= 600 ? 38 : 42)),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 1.5,
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword; // Cambia el estado de visibilidad de la contraseña
-                            });
-                          },
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10), // Bordes redondeados
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24), // Espaciado entre los campos y el botón
-
-                    // Botón principal para iniciar sesión
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF7A45D1), // Color de fondo del botón
-                        foregroundColor: Colors.white, // Color del texto
-                        padding: const EdgeInsets.symmetric(vertical: 14), // Espaciado interno del botón
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8), // Bordes redondeados
+                  ),
+                    
+                    // Espaciado
+                    SizedBox(height: hasKeyboard ? (isSmallScreen ? 20 : 30) : 50),
+                    
+                    // Formulario de login
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Container(
+                        padding: EdgeInsets.all(hasKeyboard ? (isSmallScreen ? 16 : 20) : 28),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                         ),
-                        textStyle: const TextStyle(fontSize: 16), // Tamaño del texto
-                      ),
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/home'); // Navega a la pantalla de inicio después de login
-                      },
-                      child: const Text('Iniciar Sesión'), // Texto del botón
-                    ),
-                    const SizedBox(height: 12), // Espaciado entre el botón y el texto para recuperar contraseña
-
-                    // Texto para recuperar la contraseña
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'Olvidaste tu Contraseña?', // Texto de recuperación
-                        style: TextStyle(
-                          color: Colors.black54, // Color del texto
-                          fontSize: 14, // Tamaño del texto
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'Iniciar Sesión',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: 'AntonSC',
+                                fontSize: hasKeyboard ? (isSmallScreen ? 16 : 18) : 22,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            SizedBox(height: hasKeyboard ? (isSmallScreen ? 16 : 18) : 24),
+                            
+                            // Campo de usuario
+                            TextField(
+                              controller: _usernameController,
+                              onChanged: (_) => setState(() {}),
+                              decoration: InputDecoration(
+                                labelText: 'Usuario o Correo',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: hasKeyboard ? (isSmallScreen ? 10 : 12) : 16,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: hasKeyboard ? (isSmallScreen ? 12 : 14) : 18),
+                            
+                            // Campo de contraseña
+                            TextField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              onChanged: (_) => setState(() {}),
+                              decoration: InputDecoration(
+                                labelText: 'Contraseña',
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: hasKeyboard ? (isSmallScreen ? 10 : 12) : 16,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: hasKeyboard ? (isSmallScreen ? 16 : 18) : 24),
+                            
+                            // Botón de login
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF7A45D1),
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(
+                                  vertical: hasKeyboard ? (isSmallScreen ? 12 : 14) : 16,
+                                ),
+                                minimumSize: Size.fromHeight(hasKeyboard ? (isSmallScreen ? 44 : 48) : 50),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              onPressed: (_usernameController.text.trim().isNotEmpty && 
+                                         _passwordController.text.trim().isNotEmpty && 
+                                         !_isLoading)
+                                  ? () {
+                                      final username = _usernameController.text.trim();
+                                      final password = _passwordController.text.trim();
+                                      loginUsuario(username, password);
+                                    }
+                                  : null,
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Iniciar Sesión',
+                                      style: TextStyle(
+                                        fontSize: hasKeyboard ? (isSmallScreen ? 14 : 15) : 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                            ),
+                            SizedBox(height: hasKeyboard ? (isSmallScreen ? 8 : 10) : 12),
+                            
+                            // Link de contraseña olvidada
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                                );
+                              },
+                              child: Text(
+                                'Olvidaste tu Contraseña?',
+                                style: TextStyle(
+                                  color: Colors.black54,
+                                  fontSize: hasKeyboard ? (isSmallScreen ? 12 : 13) : 14,
+                                ),
+                              ),
+                            ),
+                            
+                            // Mensaje de error
+                            if (_errorMessage != null) ...[
+                              SizedBox(height: hasKeyboard ? (isSmallScreen ? 8 : 10) : 12),
+                              Text(
+                                _errorMessage!,
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontSize: hasKeyboard ? (isSmallScreen ? 12 : 13) : 14,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.5,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ),
+                    
+                    // Solo mostrar botones sociales si no hay teclado activo
+                    if (!hasKeyboard) ...[
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Sign In with',
+                        style: TextStyle(fontSize: 14, color: Colors.black54),
+                      ),
+                      const SizedBox(height: 12),
+                      
+                      // Botón de Facebook
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 36),
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black87,
+                            minimumSize: const Size.fromHeight(44),
+                            side: const BorderSide(color: Color(0xFFE0E0E0)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                          icon: const Icon(Icons.facebook, color: Color(0xFF1877F3)),
+                          label: const Text('Continue with Facebook'),
+                          onPressed: _isLoading ? null : _loginWithFacebook,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      
+                      // Botón de prueba de conexión (solo para debug)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 36),
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size.fromHeight(44),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          icon: const Icon(Icons.wifi_find),
+                          label: const Text('🧪 Probar Conexión'),
+                          onPressed: _isLoading ? null : _testConnection,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      
+                      // Botón de Google
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 36),
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black87,
+                            minimumSize: const Size.fromHeight(44),
+                            side: const BorderSide(color: Color(0xFFE0E0E0)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                          icon: Image.asset(
+                            'assets/google_icon.png',
+                            height: 22,
+                            width: 22,
+                          ),
+                          label: const Text('Continue with Google'),
+                          onPressed: _isLoading ? null : _loginWithGoogle,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Enlace de registro
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'New Member? ',
+                            style: TextStyle(color: Colors.black54, fontSize: 14),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.pushNamed(context, '/register'),
+                            child: const Text(
+                              'Sign up Here',
+                              style: TextStyle(
+                                color: Color(0xFF7A45D1),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    
+                    // Espaciado final
+                    SizedBox(height: hasKeyboard ? 20 : 24),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 24), // Espaciado entre el formulario y los botones de redes sociales
-
-            // Texto para "Iniciar sesión con"
-            const Text(
-              'Sign In with',
-              style: TextStyle(fontSize: 14, color: Colors.black54), // Estilo del texto
-            ),
-            const SizedBox(height: 12), // Espaciado entre el texto y los botones de redes sociales
-
-            // Botón de Facebook
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 36), // Padding horizontal
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white, // Fondo blanco
-                  foregroundColor: Colors.black87, // Color del texto
-                  minimumSize: const Size.fromHeight(44), // Tamaño mínimo del botón
-                  side: const BorderSide(color: Color(0xFFE0E0E0)), // Borde gris claro
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8), // Bordes redondeados
-                  ),
-                  elevation: 0, // Sin sombra
-                ),
-                icon: const Icon(Icons.facebook, color: Color(0xFF1877F3)), // Ícono de Facebook
-                label: const Text('Continue with Facebook'), // Texto del botón
-                onPressed: () {}, // Lógica para el inicio con Facebook
-              ),
-            ),
-            const SizedBox(height: 10), // Espaciado entre los botones
-
-            // Botón de Google
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 36), // Padding horizontal
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white, // Fondo blanco
-                  foregroundColor: Colors.black87, // Color del texto
-                  minimumSize: const Size.fromHeight(44), // Tamaño mínimo del botón
-                  side: const BorderSide(color: Color(0xFFE0E0E0)), // Borde gris claro
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8), // Bordes redondeados
-                  ),
-                  elevation: 0, // Sin sombra
-                ),
-                icon: Image.asset(
-                  'assets/google_icon.png', // Icono de Google desde los assets
-                  height: 22,
-                  width: 22,
-                ),
-                label: const Text('Continue with Google'), // Texto del botón
-                onPressed: () {}, // Lógica para el inicio con Google
-              ),
-            ),
-            const SizedBox(height: 24), // Espaciado entre el botón de Google y el footer
-
-            // Footer con enlace para registrar una nueva cuenta
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center, // Centra el contenido
-              children: [
-                const Text(
-                  'New Member? ', // Texto de invitación para registrarse
-                  style: TextStyle(color: Colors.black54, fontSize: 14), // Estilo del texto
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, '/register'); // Navega a la pantalla de registro
-                  },
-                  child: const Text(
-                    'Sign up Here', // Texto para registrarse
-                    style: TextStyle(
-                      color: Color(0xFF7A45D1), // Color morado
-                      fontWeight: FontWeight.bold, // Estilo en negrita
-                      fontSize: 14, // Tamaño del texto
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24), // Espaciado entre el footer y el final
-          ],
+          ),
         ),
-      ),
-    );
+      );
   }
 }
