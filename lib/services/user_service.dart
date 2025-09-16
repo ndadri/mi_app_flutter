@@ -28,7 +28,7 @@ class UserService {
     required String fechaNacimiento,
   }) async {
     print('📝 Simulando actualización de datos...');
-    await Future.delayed(Duration(milliseconds: 500)); // Simular red
+    await Future.delayed(const Duration(milliseconds: 500)); // Simular red
     print('✅ Datos "actualizados" exitosamente');
     return {'success': true, 'message': 'Datos actualizados'};
   }
@@ -36,7 +36,7 @@ class UserService {
   // CERRAR SESIÓN - SIMPLE  
   static Future<void> logout() async {
     print('🚪 Cerrando sesión...');
-    await Future.delayed(Duration(milliseconds: 300)); // Simular proceso
+    await Future.delayed(const Duration(milliseconds: 300)); // Simular proceso
     print('✅ Sesión cerrada');
   }
 }

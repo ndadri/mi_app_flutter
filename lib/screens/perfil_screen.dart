@@ -105,8 +105,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         ],
                       ),
                       child: showPetProfile
-                          ? PerfilMascotaScreen()
-                          : PerfilUsuarioScreen(),
+                          ? const PerfilMascotaScreen()
+                          : const PerfilUsuarioScreen(),
                     ),
                   ),
                   const SizedBox(height: 24),

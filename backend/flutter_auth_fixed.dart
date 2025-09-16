@@ -29,7 +29,7 @@ class ApiConfig {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
-        ).timeout(Duration(seconds: 3));
+        ).timeout(const Duration(seconds: 3));
         
         if (response.statusCode == 200) {
           _workingIP = ip;
@@ -79,7 +79,7 @@ class AuthService {
           'username': email.trim(),
           'password': password,
         }),
-      ).timeout(Duration(seconds: 15)); // Timeout más largo
+      ).timeout(const Duration(seconds: 15)); // Timeout más largo
       
       print('📡 Respuesta recibida: ${response.statusCode}');
       print('📡 Contenido: ${response.body}');
@@ -138,7 +138,7 @@ class AuthService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-      ).timeout(Duration(seconds: 5));
+      ).timeout(const Duration(seconds: 5));
       
       return response.statusCode == 200;
     } catch (e) {

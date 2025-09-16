@@ -17,7 +17,7 @@ class PetMatchLogo extends StatelessWidget {
     final primary = primaryColor ?? Colors.pink.shade400;
     final secondary = secondaryColor ?? Colors.purple.shade300;
 
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
       child: CustomPaint(

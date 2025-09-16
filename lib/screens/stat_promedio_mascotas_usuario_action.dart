@@ -77,7 +77,7 @@ void promedioMascotasUsuarioAction(BuildContext context) {
                       fontFamily: 'AntonSC',
                       fontWeight: FontWeight.bold,
                       fontSize: isSmallScreen ? 44 : 54,
-                      color: Color(0xFF7A45D1),
+                      color: const Color(0xFF7A45D1),
                       letterSpacing: 2.0,
                     ),
                   ),

@@ -3,7 +3,6 @@
 
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
 
 class ApiConfig {
   // IPs para probar en orden de prioridad
@@ -29,7 +28,7 @@ class ApiConfig {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
-        ).timeout(Duration(seconds: 3));
+        ).timeout(const Duration(seconds: 3));
         
         if (response.statusCode == 200) {
           _workingIP = ip;
@@ -61,7 +60,7 @@ class ApiConfig {
           'correo': email,
           'contraseña': password,
         }),
-      ).timeout(Duration(seconds: 5));
+      ).timeout(const Duration(seconds: 5));
       return response.statusCode == 200;
     } catch (e) {
       print('❌ Error en login: $e');

@@ -2,19 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       home: DebugProfileScreen(),
     );
   }
 }
 
 class DebugProfileScreen extends StatefulWidget {
+  const DebugProfileScreen({super.key});
+
   @override
   _DebugProfileScreenState createState() => _DebugProfileScreenState();
 }
@@ -56,11 +60,11 @@ class _DebugProfileScreenState extends State<DebugProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('DEBUG - Datos del Perfil'),
-        backgroundColor: Color(0xFF7A45D1),
+        title: const Text('DEBUG - Datos del Perfil'),
+        backgroundColor: const Color(0xFF7A45D1),
       ),
       body: ListView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         children: profileData.entries.map((entry) => 
           Card(
             child: ListTile(
